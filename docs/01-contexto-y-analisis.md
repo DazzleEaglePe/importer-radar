@@ -255,6 +255,7 @@ La **Clave SOL** es el usuario y la contraseña con los que una empresa o person
 | a | **Antigüedad.** Entendí «mínimo 5 años, sin excluir a los más antiguos» como: 5 años o más es lo ideal, y con menos **no se descarta** pero el nivel no pasa de B | Dejarlo así. Si prefieres que la menor antigüedad **sí descarte**, se cambia a un filtro eliminatorio | `docs/05` §6.1 |
 | b | **Respaldos.** Dónde guardar la copia cifrada de la base de datos: disco externo o una carpeta de nube (OneDrive) cifrada | Tú eliges. Con la nube, siempre cifrada | `docs/03`, `docs/07` §9 |
 | c | **Pesos de los perfiles nuevos.** Los de laptops, accesorios y repuestos son una propuesta | Calibrarlos en el spike con los códigos CIIU reales | `docs/01` §6.1 |
+| e | **Tope por rubro y peso de las secundarias** (P4 y P5). 5 de las 6 empresas de nivel B no tienen ningún punto de rubro: los otros criterios suman 55, justo el umbral de B | Sin rubro relevante, nivel máximo C. Peso de las secundarias de 0.8 a 0.5 (`docs/12` §7.3 y §7.4) | `docs/01` §6, `docs/05` §6.1 |
 | d | **Criterio «comprobantes» del puntaje.** En las 21 fichas, las 21 están autorizadas a emitir factura y 20 son emisores electrónicos: el criterio da casi lo mismo a todas. En cambio, **4 de 21 son «Buenos Contribuyentes»** y varias son agentes de retención de IGV (señal de tamaño) | Reemplazar «comprobantes» (10 puntos) por «padrones de SUNAT» (10 puntos): Buen Contribuyente vigente 6, agente de retención de IGV vigente 4 (`docs/12` §7.3) | `docs/01` §6, `docs/05` §6.1 |
 
 ## 10. Glosario
