@@ -2,7 +2,7 @@
 
 > Panel interno que toma la lista oficial de importadores de SUNAT, descarta automáticamente a los que están de baja o no habidos, identifica a qué rubro se dedica cada uno y deja una lista corta de **proveedores locales confiables** para el primer lote de importación (iPhone) y los siguientes (laptops y dispositivos electrónicos en general).
 
-**Estado:** Fase 0 — documentación previa. Todavía no hay código.
+**Estado:** Fase 0 — documentación previa, con el spike de la semana 1 en curso. Todavía no hay código.
 **Versión de la documentación:** 0.2 (borrador, 25/10/2026), armada a partir de las capturas de SUNAT, tus respuestas de arranque y tus respuestas a las preguntas abiertas.
 **Nombre:** *Radar de Importadores* (confirmado el 25/10/2026). La carpeta se llama `bot-scraping` y el paquete de código usará `radar`.
 
@@ -65,9 +65,10 @@ Lista Aduanet  →  Padrón reducido SUNAT  →  Consulta RUC puntual  →  Punt
 | [`docs/09-design-system.md`](docs/09-design-system.md) | Tokens, componentes y accesibilidad |
 | [`docs/10-plan-de-desarrollo.md`](docs/10-plan-de-desarrollo.md) | Fases, hitos, backlog y riesgos |
 | [`docs/11-estructura-de-proyecto.md`](docs/11-estructura-de-proyecto.md) | Árbol de carpetas, convenciones y primeros pasos |
+| [`docs/12-informe-del-spike.md`](docs/12-informe-del-spike.md) | Cifras reales del spike: formato del padrón y acceso a Aduanet |
 
 ## Próximos pasos
 
 1. Preguntas abiertas: respondidas el 25/10. Quedan tres matices en `docs/01-contexto-y-analisis.md` §9.3.
-2. Hacer el **spike de la semana 1** (`docs/10`) en tu Mac: Aduanet ya respondió desde ahí. Falta bajar la lista completa y el padrón, y medir cuántas filas hay de verdad.
+2. Cerrar el **spike de la semana 1** (`docs/12`): el padrón ya está medido (18.5 millones de filas). Falta que **guardes la lista de Aduanet** desde tu navegador, porque la descarga directa da 404.
 3. Entregar primero un **CSV filtrado sin interfaz** (hito H1). Con eso ya puedes empezar a contactar proveedores mientras se construye el panel.

@@ -12,8 +12,8 @@
 | --- | --- | --- |
 | Filas en la lista de Aduanet | 20 000 a 100 000 | **Por medir** en el spike |
 | RUC únicos tras deduplicar | 70 % a 90 % de las filas | Por medir |
-| Registros del padrón reducido | Más de 11 millones (cifra comunitaria) | Por confirmar al descargar |
-| Importadores ACTIVO + HABIDO | 30 % a 60 % de los RUC únicos | Por medir |
+| Registros del padrón reducido | **18,486,442** | Medido el 25/10/2026 |
+| Importadores ACTIVO + HABIDO | Referencia medida: **36.8 %** de los RUC `20` del padrón (871,239 de 2,368,713). En la lista de Aduanet, por medir | Parcial |
 | Usuarios del panel | 1 (tú) | Confirmado |
 | Usuarios simultáneos | 1 | Derivado |
 | Consultas RUC por día | 300 a 500 | Propuesto (ritmo cortés) |
@@ -27,7 +27,7 @@
 | RNF-REN-01 | Listado de importadores con filtros y orden (50 000 filas en base) | p95 ≤ 400 ms en el servidor | Prueba de carga con datos sintéticos |
 | RNF-REN-02 | Búsqueda por razón social con tolerancia a errores | p95 ≤ 500 ms | Índice trigram y prueba con 100 búsquedas |
 | RNF-REN-03 | Ingesta de la lista de Aduanet | ≤ 5 min para 100 000 filas, sin contar la descarga | Cronometrar con archivo de prueba |
-| RNF-REN-04 | Procesar el padrón reducido (11 M de filas) | ≤ 15 min y **memoria ≤ 512 MB** | Medir con archivo real en el spike |
+| RNF-REN-04 | Procesar el padrón reducido (18.5 M de filas) | ≤ 15 min y **memoria ≤ 512 MB** | **Medido: 26 s** para leer las 18.5 M de filas en streaming. Falta medir la memoria máxima |
 | RNF-REN-05 | Recalcular puntajes de 50 000 importadores | ≤ 60 s | Prueba automatizada |
 | RNF-REN-06 | Carga inicial del panel | LCP ≤ 2.5 s en red doméstica | Lighthouse |
 | RNF-REN-07 | Exportar 50 000 filas a CSV | ≤ 20 s, en flujo continuo (sin cargar todo en memoria) | Prueba automatizada |

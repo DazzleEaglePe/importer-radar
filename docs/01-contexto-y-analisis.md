@@ -29,7 +29,7 @@ El trabajo es **automatizar el cruce** de ambas para no revisar la lista uno por
 | Estructura | Una sola tabla larga en una página. No vimos paginación ni filtros en la captura |
 | Calidad | Razón social con comillas y espacios sobrantes (`" SERVICIOS GENERALES HUZA & OÑA E.I.R.L "`). **RUC repetidos**: `20526185847` aparece 4 veces (27/01/2014 y tres veces 24/01/2014). Mezcla de RUC `20…` (personas jurídicas) y `10…` (personas naturales con negocio) |
 | Tamaño | **Desconocido.** Hay que medirlo en el spike |
-| Acceso | Desde el entorno de desarrollo el servidor **rechazó la conexión** (`ECONNREFUSED`). **Desde tu Mac sí respondió** (prueba del 25/10/2026 sobre otra página del mismo servidor). Falta bajar la lista completa para medir su tamaño |
+| Acceso | Desde el entorno de desarrollo el servidor **rechazó la conexión** (`ECONNREFUSED`). Desde tu Mac el servidor responde, pero **la dirección de la lista da 404 al acceso directo**, con `curl` y con un Chrome sin sesión previa (`docs/12` §2). Tu pestaña la cargó porque llegaste por otro camino. Falta guardar la página para medir su tamaño |
 
 **Corrección importante al planteamiento inicial:** esta lista **no es «los importadores más grandes del Perú»**. Es la relación de quienes *actualizaron sus datos* como importadores, ordenada alfabéticamente. No trae volumen, montos ni productos. Sirve como **universo de empresas registradas como importadoras**, no como ranking.
 
@@ -37,10 +37,10 @@ El trabajo es **automatizar el cruce** de ambas para no revisar la lista uno por
 
 SUNAT ofrece el [padrón reducido del RUC](https://orientacion.sunat.gob.pe/padron-reducido-del-ruc-para-descarga) para descarga. Según la página oficial, incluye: **RUC, razón social, estado del contribuyente, condición de domicilio, ubigeo y dirección fiscal**, más una segunda lista con los anexos (otros locales) de cada RUC.
 
-- Un repositorio comunitario lo describe con **más de 11 millones de registros**. Es una cifra aproximada de terceros, no oficial.
+- **Medido el 25/10/2026:** el archivo trae **18,486,442 filas** (la fuente comunitaria hablaba de más de 11 millones). Pesa 376 MiB comprimido y 1.47 GiB descomprimido (`docs/12` §3).
 - **No trae actividad económica (CIIU).** Por eso no reemplaza a la consulta puntual.
-- El formato exacto del archivo, su codificación y su frecuencia de actualización **se confirman al descargarlo** (spike). Históricamente ha sido un ZIP con un TXT delimitado por `|`.
-- Con 11 millones de filas, **no se carga entero a la base de datos**: se procesa en streaming y solo se guardan las filas cuyo RUC está en nuestra lista de importadores.
+- **Formato real:** un ZIP con un único TXT delimitado por `|`, en **ISO-8859-1** (no UTF-8), con cabecera, fin de línea `LF` y `-` como valor vacío. Los valores de estado y condición vienen **truncados a 20 caracteres**. Parece actualizarse a diario (la página dice «Actualizado al 25/10/2026»), cosa que se confirma observando varios días.
+- Con 18.5 millones de filas, **no se carga entero a la base de datos**: se procesa en streaming (26 s en tu Mac) y solo se guardan las filas cuyo RUC está en nuestra lista de importadores.
 
 ### 2.3 Consulta RUC individual (portal SUNAT)
 
@@ -115,6 +115,7 @@ Un panel web interno con un **pipeline automático** y una **vista de revisión*
 | D-16 | Categorías: **iPhone primero**, después laptops Apple, accesorios y cargadores, repuestos y baterías. Cuatro perfiles de partida | Tu respuesta 25/10 |
 | D-17 | El nombre **Radar de Importadores** queda confirmado | Tu respuesta 25/10 |
 | D-18 | Los términos de las fuentes se revisan en lo posible (§9.1). Las consultas manuales del spike las haces **tú**, no yo, porque el `robots.txt` de la consulta RUC bloquea a los agentes de Anthropic | Revisión del 25/10 |
+| D-19 | La lista de Aduanet se carga desde un **archivo que guardas tú** desde tu navegador. La descarga automática da 404 y no se intentará esquivar | Spike 25/10 (`docs/12` §2) |
 
 ## 6. Cómo se decide qué es «confiable» (propuesto)
 
@@ -182,7 +183,7 @@ Cada categoría tiene su propio perfil, con los mismos criterios pero distinto p
 
 | ID | Riesgo | Prob. | Impacto | Mitigación |
 | --- | --- | --- | --- | --- |
-| R-01 | Aduanet o SUNAT rechazan o limitan las conexiones automáticas | Media (rechazó la conexión desde el entorno de prueba, pero respondió desde tu Mac) | Alto | Todo corre en tu Mac. Ingesta por **archivo cargado a mano** como alternativa |
+| R-01 | Aduanet o SUNAT rechazan o limitan las conexiones automáticas | **Alta para la lista de Aduanet** (404 al acceso directo, `docs/12` §2). Media para el padrón (la descarga directa funcionó) | Alto | Todo corre en tu Mac. **La lista se carga desde un archivo que guardas tú.** No se prueban cabeceras ni cookies para esquivar el control |
 | R-02 | La consulta RUC pide captcha o limita el volumen | Alta | Alto | Prefiltro en masa con el padrón, cola priorizada, ritmo bajo, pausa automática y **fallback manual**. Opción de proveedor de pago intercambiable |
 | R-03 | Cambia el HTML de SUNAT y el parser devuelve datos erróneos | Media | Alto | Parsers con pruebas sobre HTML guardado, validación estricta y alerta. Un parseo que falla **no guarda datos basura** |
 | R-04 | Se interpreta el puntaje como garantía y se compra a un estafador | Media | Muy alto | Mensajes claros en la interfaz, lista de verificación obligatoria antes de «Aprobar», y no usar el nombre «confiable» como sello |
@@ -217,7 +218,7 @@ Respondidas el 25/10/2026:
 | Fuente | Resultado |
 | --- | --- |
 | `www.sunat.gob.pe/robots.txt` | No existe (404) |
-| `www.aduanet.gob.pe/robots.txt` | No existe: el servidor devuelve su página genérica |
+| `www.aduanet.gob.pe/robots.txt` | No existe (404) |
 | `e-consultaruc.sunat.gob.pe/robots.txt` | Existe y lo administra Cloudflare. Permite el acceso general (`Allow: /`) y declara **`ai-train=no`** (no usar el contenido para entrenar IA). **Bloquea por nombre** a rastreadores de IA como `ClaudeBot` y `GPTBot` |
 | Página principal de SUNAT | **No tiene un enlace de términos de uso ni de aviso legal.** Solo publica una Política de Privacidad y el procedimiento para ejercer los derechos ARCO |
 | Búsqueda de términos sobre acceso automatizado o reutilización | **No encontré un texto oficial** |
@@ -257,8 +258,8 @@ La **Clave SOL** es el usuario y la contraseña con los que una empresa o person
 | Término | Significado |
 | --- | --- |
 | **RUC** | Registro Único de Contribuyentes. 11 dígitos. Prefijo `20` = persona jurídica, `10` = persona natural con negocio |
-| **Estado** | Situación del contribuyente: `ACTIVO`, suspensión temporal, baja provisional, baja definitiva, baja de oficio, baja provisional por oficio. Valores exactos por confirmar en el padrón |
-| **Condición** | Si SUNAT pudo verificar el domicilio fiscal: `HABIDO`, `NO HABIDO`, `NO HALLADO`, `PENDIENTE`. Valores exactos por confirmar |
+| **Estado** | Situación del contribuyente. Valores reales del padrón, truncados a 20 caracteres: `ACTIVO`, `BAJA DE OFICIO`, `BAJA DEFINITIVA`, `SUSPENSION TEMPORAL`, `BAJA PROV. POR OFICI` y otros (`docs/12` §3.4) |
+| **Condición** | Si SUNAT pudo verificar el domicilio fiscal. Valores reales: `HABIDO`, `NO HABIDO`, `NO HALLADO …` (9 variantes), `PENDIENTE`, `NO APLICABLE`, `POR VERIFICAR` y `-` |
 | **CIIU** | Clasificación Industrial Internacional Uniforme (Rev. 4). Código de 4 dígitos de la actividad económica |
 | **Padrón reducido** | Archivo de descarga masiva de SUNAT con datos básicos de los RUC |
 | **Aduanet** | Portal de la aduana de SUNAT donde está la lista de importadores |

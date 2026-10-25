@@ -67,6 +67,10 @@ Objetivo: reemplazar supuestos por datos. Todo se hace **desde tu equipo**, con 
 | SP-10 | Redactar el informe de una página con decisiones y ajustes a los documentos | Informe + cambios en `docs/` | G0 |
 | SP-11 | Medir la **huella en disco**: imágenes de Docker, base de datos y archivos (`du -sh`), y decidir si el worker corre fuera de Docker | Número real en GB | RNF-COS-04, `docs/04` §6.4 |
 
+### 4.1 Resultados (25/10/2026)
+
+El detalle está en [`12-informe-del-spike.md`](12-informe-del-spike.md): el padrón ya está medido (SP-03 y SP-04), la descarga automática de la lista se probó sin éxito (SP-02) y quedan pendientes SP-01 y SP-05 a SP-08.
+
 ## 5. Backlog por épica
 
 **Estimación en días de trabajo efectivo** (rangos). Se suman a las 15 a 20 horas semanales.

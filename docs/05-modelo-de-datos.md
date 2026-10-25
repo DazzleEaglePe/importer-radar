@@ -219,7 +219,9 @@ CREATE INDEX ix_status_hist ON ruc_status_history (ruc, observed_at DESC);
 - `DISCARDED` siempre lleva `discard_reason` y viceversa (restricción `CHECK`).
 - Una empresa descartada **se reactiva** si el padrón siguiente la vuelve `ACTIVO` + `HABIDO` (pasa a `PADRON_CHECKED`, o a `LOOKED_UP` si ya tenía ficha).
 - Un `EXCLUIDO_MANUAL` **no se reactiva solo**: hay que restaurarlo a mano.
-- Valores de `estado` y `condicion`: se guardan **tal como vienen en el padrón**, en mayúsculas y sin espacios sobrantes. La lista exacta se confirma al descargar el archivo. El filtro compara contra `ACTIVO` y `HABIDO`.
+- Valores de `estado` y `condicion`: se guardan **tal como vienen en el padrón** (en mayúsculas, sin espacios sobrantes y **truncados a 20 caracteres** por SUNAT, por ejemplo `BAJA PROV. POR OFICI`). El filtro compara con los valores exactos `ACTIVO` y `HABIDO`. Lista real en `docs/12` §3.4.
+- `ubigeo` y los demás campos que el padrón trae como `-` se guardan como **nulos**. El 85 % de las filas del padrón no trae ubigeo (probablemente las personas naturales), así que el criterio de logística da 0 puntos cuando falta.
+- Las filas del padrón con distinto número de columnas o con un RUC que no tenga 11 dígitos se registran en `invalid_rows` y no se cargan.
 
 ## 5. Consultas y fichas
 

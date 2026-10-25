@@ -25,7 +25,7 @@ bot-scraping/
 ├─ openapi.json                   Contrato versionado (se compara en la integración continua)
 │
 ├─ docs/                          Documentación (esta carpeta)
-│  ├─ 01-contexto-y-analisis.md … 11-estructura-de-proyecto.md
+│  ├─ 01-contexto-y-analisis.md … 12-informe-del-spike.md
 │  └─ decisiones/                 ADR nuevos, uno por archivo, cuando crezca el registro
 │
 ├─ backend/                       Python 3.12 o superior · gestionado con uv
