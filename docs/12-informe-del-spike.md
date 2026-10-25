@@ -266,7 +266,7 @@ Por eso la **priorización** importa: con las primeras 400 a 800 consultas, bien
 
 ## 6. Siguientes pasos
 
-1. **Exportar el primer CSV (hito H1):** los 11,459 elegibles con razón social, tipo, estado, condición, departamento y prioridad, para que los puedas abrir en Excel.
+1. **Primer CSV (hito H1, versión provisional): generado.** Los 11,459 elegibles con razón social, tipo, estado, condición, departamento y prioridad, en `data/processed/aduanet/2026-10-25/importadores_activo_habido.csv` (fuera de git), hecho con `scripts/spike/export_h1_csv.py`. La prioridad va de 0 a 100: 7,095 empresas quedan en 70 (personas jurídicas en Lima o Callao sin palabra clave), 1,103 en 40 y 3,009 en 0 (casi todas personas naturales). **Solo 242 nombres (2.1 %) traen una palabra clave de electrónica**: el nombre ayuda a ordenar la cola, pero **no reemplaza la consulta del rubro (CIIU)**.
 2. Tú haces las 20 consultas manuales (SP-06) y guardas cada página completa. Con eso cerramos SP-07 y calibramos la lectura de la ficha.
 3. Leer la política de privacidad de SUNAT (SP-09) y medir la huella en disco (SP-11).
 4. Cerrar este informe con la puerta G0, que ya se cumple en lo esencial: se llega a las dos fuentes masivas desde tu Mac.

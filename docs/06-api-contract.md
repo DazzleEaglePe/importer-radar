@@ -359,7 +359,7 @@ El servidor completa `by` y `at`.
 
 ### 4.15 `GET /importers/export` y `GET /suppliers/export`
 
-Aceptan los mismos filtros que el listado más `format=csv|xlsx`. Respuesta en flujo continuo con `Content-Disposition: attachment; filename="importadores-2026-10-25.csv"`. Cada exportación queda en la auditoría con los filtros usados. El CSV usa UTF-8 con BOM (para abrir bien en Excel) y `;` como separador cuando `locale=es-PE`.
+Aceptan los mismos filtros que el listado más `format=csv|xlsx`. Respuesta en flujo continuo con `Content-Disposition: attachment; filename="importadores-2026-10-25.csv"`. Cada exportación queda en la auditoría con los filtros usados. El CSV usa UTF-8 con BOM (para abrir bien en Excel) y `,` como separador (el formato es-PE usa punto decimal). Con `delimiter=;` se genera la variante para un Excel configurado con coma decimal.
 
 ## 5. Autorización por rol (resumen)
 
