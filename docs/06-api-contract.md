@@ -230,8 +230,8 @@ Respuesta `200`:
 Para un importador puntuado, `scores` trae, por perfil activo:
 ```json
 { "profile_id": 1, "profile_name": "Smartphones / iPhone", "profile_version": 1,
-  "score": 85, "tier": "A", "computed_at": "…",
-  "breakdown": { "gates": {…}, "items": [ { "key": "rubro", "points": 40, "max": 40, "note": "4652 principal, peso 1.0" } ], "total": 85 } }
+  "score": 95, "tier": "A", "computed_at": "…",
+  "breakdown": { "gates": {…}, "items": [ { "key": "rubro", "points": 45, "max": 45, "note": "4652 principal, peso 1.0" } ], "total": 95 } }
 ```
 > El campo `ubigeo` del ejemplo es ilustrativo. Los datos de domicilio fiscal de personas jurídicas se muestran; los de personas naturales (`ruc_kind = NATURAL`) siguen las reglas de `docs/07` §7.
 

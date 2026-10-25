@@ -146,7 +146,7 @@ Reglas de la cola:
 - El estado de la cola (`paused`, `pause_reason`, `daily_cap`, `delay_min_s`, `delay_max_s`, `ttl_days`) está en `app_settings` y se cambia desde el panel.
 - Una tarea `RUNNING` que lleva más de 5 minutos sin latido vuelve a `QUEUED` (recuperación tras un reinicio).
 - Una sola tarea abierta por RUC (índice único parcial).
-- **Prioridad** de 0 a 100 al encolar: +30 si el RUC es `20…`, +20 si el ubigeo es de Lima o Callao, +20 si la última actualización en Aduanet es de hasta 2 años (+10 hasta 5), y hasta +30 por palabras clave en la razón social (10 por palabra). Los valores y las palabras se configuran.
+- **Prioridad** de 0 a 100 al encolar: +40 si el RUC es `20…`, +30 si el ubigeo es de Lima o Callao, y hasta +30 por palabras clave en la razón social (10 por palabra). La fecha de Aduanet no se usa (`docs/12` §2.4). Los valores y las palabras se configuran.
 
 ### 5.3 Interfaz de los proveedores de consulta
 
@@ -175,7 +175,7 @@ class ProviderResult:
 
 ### 5.4 Ingesta
 
-- **Aduanet:** **vía principal: se carga la página que guardas tú** (`radar ingest aduanet --file`). La descarga automática da 404 hoy (`docs/12` §2) y solo se agregaría si se entiende el flujo de navegación de forma legítima. Se parsea con `selectolax`, se valida cada RUC (dígito verificador módulo 11), se normaliza el nombre y se hace *upsert* por RUC en lotes. Las filas inválidas van a cuarentena.
+- **Aduanet:** se descarga con **una solicitud simple** (`GET` sin sesión: 200 en 2.8 s, 5.5 MB, sin HTTPS) o se carga una página guardada con `--file`. Se decodifica como `windows-1252` y se acepta tanto el HTML original como el que guarda Chrome. Se parsea con `selectolax`, se valida cada RUC (dígito verificador módulo 11), se normaliza el nombre y se hace *upsert* por RUC en lotes. Las filas inválidas van a cuarentena.
 - **Padrón reducido:** se lee el ZIP en **streaming**, línea por línea, sin descomprimir a disco. Se carga en memoria **solo el conjunto de RUC de nuestra lista** (decenas de miles) y se conservan únicamente las filas que coinciden. Los lotes se guardan con `COPY` a una tabla temporal y `INSERT … ON CONFLICT`. **Formato real** (`docs/12` §3.2): decodificar como ISO-8859-1, separar por `|`, descartar la columna 16 vacía, convertir `-` en nulo y mandar a cuarentena las filas con distinto número de columnas o con un RUC que no tenga 11 dígitos (hubo 5 y 1 en el archivo del 25/10).
 - **Protección ante archivos defectuosos:** si el padrón trae menos filas que `padron_sanity_min_rows` (configurable), la ejecución **falla** y no descarta a nadie. Así un archivo truncado no borra el embudo.
 - Cada archivo se guarda en `/data/raw` y se registra con su hash. Un mismo hash no se reprocesa.
@@ -223,7 +223,7 @@ flowchart TB
 
 ### 6.1 Dónde corre el worker (por validar en el spike)
 
-**Decisión del 25/10/2026 (D-11): opción A, todo en tu Mac.** Desde el entorno de desarrollo Aduanet rechazó la conexión, y desde tu Mac el servidor responde, pero **la lista da 404 al acceso directo** (`docs/12` §2). Las opciones B y C quedan como ruta futura, solo si hiciera falta:
+**Decisión del 25/10/2026 (D-11): opción A, todo en tu Mac.** Desde el entorno de desarrollo Aduanet rechazó la conexión, por una causa que no era un bloqueo (`docs/12` §2.2). Desde tu Mac, la lista de Aduanet y el padrón se descargaron sin problema. Las opciones B y C quedan como ruta futura, solo si hiciera falta:
 
 | Opción | Cuándo | Pros | Contras |
 | --- | --- | --- | --- |
@@ -249,7 +249,7 @@ En cualquier opción existe la **ingesta por archivo cargado**, así que un bloq
 | `REDIS_URL` | `redis://redis:6379/0` | Redis |
 | `SECRET_KEY` | *(generada, no se versiona)* | Firma y cifrado de la aplicación |
 | `APP_BASE_URL` | `https://radar.ejemplo.pe` | Para enlaces de invitación |
-| `ADUANET_LIST_URL` | `http://www.aduanet.gob.pe/servlet/CGListImp?flag=1&nom` | Lista de importadores. **Da 404 al acceso directo** (`docs/12` §2): por ahora se usa `--file` con la página guardada |
+| `ADUANET_LIST_URL` | `http://www.aduanet.gob.pe/servlet/CGLisImp?flag=1&nom` | Lista de importadores (sin «t» en `CGLisImp`). Solo HTTP |
 | `PADRON_URL` | `http://www2.sunat.gob.pe/padron_reducido_ruc.zip` | Archivo del padrón reducido (enlace de la página oficial, `docs/12` §3.1) |
 | `LOOKUP_PROVIDER` | `sunat_web` | `sunat_web`, `third_party` u `official_api` |
 | `LOOKUP_DELAY_MIN_S` / `LOOKUP_DELAY_MAX_S` | `6` / `12` | Espera entre consultas |

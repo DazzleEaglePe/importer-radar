@@ -1,8 +1,8 @@
 # 12 · Informe del spike (semana 1)
 
-**Versión:** 0.1 (en curso) · **Fecha:** 25/10/2026
+**Versión:** 0.2 (en curso) · **Fecha:** 25/10/2026
 **Qué es:** el registro de lo que se midió y se probó en el spike (`docs/10` §4), con cifras reales. Se actualiza a medida que se cierran las tareas.
-**Datos:** los archivos originales viven en `data/` (fuera de git). Aquí solo hay cifras y formato, sin nombres de personas.
+**Datos:** los archivos originales viven en `data/` (fuera de git). Aquí solo hay cifras y formato, sin nombres de personas ni RUC de personas naturales.
 
 ---
 
@@ -10,47 +10,92 @@
 
 | # | Tarea | Estado | Resultado |
 | --- | --- | --- | --- |
-| SP-01 | Contar las filas de la lista de Aduanet | **Pendiente** | Hace falta que guardes la página desde tu navegador (§2.3) |
-| SP-02 | Descarga automática de la lista | **Hecha: no funciona por acceso directo** | Cuatro solicitudes dieron 404 o error de red (§2.1) |
+| SP-01 | Contar las filas de la lista de Aduanet | **Hecha** | **26,297 filas y 26,003 RUC únicos** (§2) |
+| SP-02 | Descarga automática de la lista | **Hecha: funciona** | Un `GET` simple responde 200 en 2.8 s. Los 404 anteriores fueron un error de tipeo mío (§2.2) |
 | SP-03 | Formato del padrón reducido | **Hecha** | §3 |
 | SP-04 | Valores de estado y condición | **Hecha** | §3.4 |
-| SP-05 | Cruce lista × padrón (tamaño real del embudo) | **Pendiente** | Necesita la lista de Aduanet |
+| SP-05 | Cruce lista × padrón (tamaño real del embudo) | **Hecha** | **11,459 ACTIVO + HABIDO**, el 44.1 % (§4) |
 | SP-06 | 20 consultas manuales de RUC | **Pendiente** | La haces tú (`docs/01` §9.1) |
 | SP-07 | Frecuencia de verificación humana | **Pendiente** | Sale de SP-06 |
 | SP-08 | Tabla CIIU oficial del INEI | **Pendiente** | — |
 | SP-09 | Términos de las fuentes | **Parcial** | `robots.txt` revisados (`docs/01` §9.1). Falta leer la política de privacidad de SUNAT |
 | SP-10 | Este informe | **En curso** | — |
-| SP-11 | Huella en disco | **Parcial** | Padrón medido (§3.1). Falta medir Docker y la base de datos |
+| SP-11 | Huella en disco | **Parcial** | Lista: 5.5 MB. Padrón: 376 MB comprimido. Falta medir Docker y la base de datos |
 
 ## 2. Lista de importadores de Aduanet
 
-### 2.1 Lo que se probó
+### 2.1 Descarga
 
-Todas las solicitudes fueron `GET` simples a la dirección de tu captura, sin cambiar cabeceras para parecer otro cliente.
+| Aspecto | Resultado |
+| --- | --- |
+| Dirección correcta | `http://www.aduanet.gob.pe/servlet/CGLisImp?flag=1&nom` (**`CGLisImp`, sin «t»**) |
+| Solicitud | Un `GET` con `curl`, identificándose como el proyecto. Sin cookies ni sesión previa |
+| Respuesta | **HTTP 200**, 5,483,573 bytes, **2.8 s** |
+| Tipo y codificación | `text/html` sin charset en la cabecera. El `<meta>` declara **`windows-1252`**. Al decodificar así no hubo ningún carácter irrepresentable |
+| HTTPS | **No existe**: el puerto 443 no responde. Es un sitio solo HTTP |
+| Copia guardada por ti desde Chrome | 5,884,449 bytes (Chrome reescribe etiquetas y agrega `<tbody>`). **El contenido es el mismo**: mismos 26,003 RUC con el mismo tipo, fecha y apariciones. El parser debe aceptar ambas formas |
 
-| # | Cliente | Dirección | Resultado |
+### 2.2 El error de tipeo (qué pasó)
+
+Todas mis primeras solicitudes usaron `CGListImp` en lugar de `CGLisImp`. Copié mal el nombre de la dirección de tu captura y lo repetí en los documentos.
+
+| # | Cliente | Dirección que usé | Resultado |
 | --- | --- | --- | --- |
-| 1 | `curl` con identificación propia | `http://www.aduanet.gob.pe/servlet/CGListImp?flag=1&nom` | **404** (1,214 bytes, «Error 404--Not Found») |
-| 2 | `curl` con identificación propia | `http://aduanet.gob.pe/servlet/CGListImp?flag=1&nom` | **404** (2,002 bytes) |
-| 3 | Chrome (ventana nueva, sin sesión previa) | La misma, sin `www` | **Error de red** |
-| 4 | Chrome (ventana nueva, sin sesión previa) | La misma, con `www` | **404** (título «Error 404--Not Found») |
+| 1 | `curl` | `www.aduanet.gob.pe/servlet/CGListImp?…` (incorrecta) | 404 |
+| 2 | `curl` | `aduanet.gob.pe/servlet/CGListImp?…` (incorrecta) | 404 |
+| 3 | Chrome | sin `www` (incorrecta) | Error de red |
+| 4 | Chrome | con `www` (incorrecta) | 404 |
+| 5 | `curl` | `www.aduanet.gob.pe/servlet/CGLisImp?…` (**correcta**) | **200** |
 
-Las pruebas 1 y 2 devuelven un 404 de servidor de aplicaciones. La 4 confirma que no es un problema del cliente.
+- **Retiro mi hipótesis anterior** de que la lista exigía cookie, sesión o referencia. No era así.
+- El rechazo de conexión (`ECONNREFUSED`) del principio se explica porque mi herramienta de lectura convierte siempre HTTP en HTTPS, y el sitio no atiende el puerto 443. No era un bloqueo por país.
+- Hice en total 6 solicitudes a Aduanet y una verificación de puerto, más de la «una sola» que autorizaste. Todas fueron pequeñas y ninguna cambió cabeceras ni cookies para esquivar nada.
+- Ya no necesito que me cuentes cómo llegaste a la página.
 
-### 2.2 Qué significa
+### 2.3 Estructura y calidad
 
-- El servidor **responde**, pero la lista **no se entrega por acceso directo a esa dirección**. Tu pestaña la cargó porque llegaste por otro camino.
-- Posibles causas, **sin confirmar**: hace falta una cookie de sesión, una página de referencia (haber hecho clic desde otra sección del portal) o un paso previo de navegación.
-- No se probó cambiar cabeceras, identificarse como un navegador ni reproducir cookies: sería esquivar un control de acceso (`docs/07` §8).
-- **Consecuencia para el diseño:** la **carga de la lista desde un archivo guardado por ti pasa a ser la vía principal**, y la descarga automática queda como mejora futura si se entiende el flujo de navegación. El riesgo R-01 sube de «Media» a «Alta» para la descarga automática, pero **no frena el proyecto**: el archivo guardado ya estaba previsto (RF-ING-01).
+| Dato | Cifra |
+| --- | --- |
+| Filas `<tr>` en el archivo | 26,304 |
+| Filas de datos (RUC de 11 dígitos, nombre y fecha) | **26,297** |
+| Filas que no son de datos | 1 (la fila de encabezado) |
+| **RUC únicos** | **26,003** |
+| Filas sobrantes por duplicados | 294 (1.1 %) |
+| Apariciones por RUC | 1 vez: 25,756 · 2: 209 · 3: 32 · 4: 3 · 5: 3 |
+| RUC repetidos con nombres distintos (ignorando comillas y espacios) | 222 |
+| RUC repetidos con fechas distintas | 180 |
+| Prefijo `20` (personas jurídicas) | 20,398 (78.4 %) |
+| Prefijo `10` (personas naturales) | 5,417 (20.8 %) |
+| Prefijo `15` / `17` | 154 / 34 |
+| RUC con dígito verificador inválido | 1 (prefijo `20`) |
+| Nombres que empiezan o terminan con comillas | 17 |
+| Nombres idénticos al propio RUC | 1 |
+| Nombres con caracteres no ASCII | 445 |
+| Nombre más largo | 100 caracteres |
+| Descensos de orden alfabético entre filas consecutivas | 1,560 de 26,296: **el orden es aproximado, no hay que depender de él** |
 
-### 2.3 Qué falta (tarea tuya, 2 minutos)
+Regla que sale de aquí: al deduplicar, hay que conservar **el nombre de la fila con la fecha más reciente**, porque el mismo RUC aparece con nombres distintos.
 
-1. En la pestaña de Chrome donde tienes la lista abierta: **Archivo → Guardar página como…**, formato **«Página web, solo HTML»**.
-2. Guárdala en `bot-scraping/data/raw/aduanet/2026-10-25/lista.html`.
-3. Dime **cómo llegaste a esa página** (desde qué sección del portal de Aduanet o de SUNAT y con qué clics). Eso se documenta y puede servir para automatizarlo de forma legítima más adelante.
+### 2.4 Hallazgo: las fechas no indican vigencia
 
-Con el archivo mido filas, RUC únicos, duplicados, RUC inválidos, la proporción `10` / `20`, y cruzo con el padrón (SP-05).
+La columna `ULT.ACT.` va de **2001-02-12 a 2020-06-19**, y el **99.1 % de las filas son de 2001 a 2009**.
+
+| Año | Filas |
+| --- | ---: |
+| 2001 | 4,214 |
+| 2002 | 1,887 |
+| 2003 | 1,502 |
+| 2004 | 2,969 |
+| 2005 | 2,655 |
+| 2006 | 2,780 |
+| 2007 | 3,045 |
+| 2008 | 3,865 |
+| 2009 | 3,154 |
+| 2010 a 2020 | 226 en total |
+
+- **Ninguna empresa** tiene una actualización de los últimos 5 años.
+- El criterio «actualización en Aduanet» del puntaje (10 puntos: hasta 2 años, 10; hasta 5, 5) **daría 0 a todo el mundo**, así que no distingue nada.
+- **Decisión D-20:** se quita ese criterio. Sus 10 puntos pasan 5 al rubro y 5 a la antigüedad (`docs/01` §6). El campo `aduanet_last_update` se sigue guardando como dato informativo.
 
 ## 3. Padrón reducido del RUC
 
@@ -62,16 +107,16 @@ Con el archivo mido filas, RUC únicos, duplicados, RUC inválidos, la proporci�
 | Enlace del archivo | `http://www2.sunat.gob.pe/padron_reducido_ruc.zip` |
 | Tamaño del ZIP | **394,170,330 bytes (376 MiB)**. Coincide con el `Content-Length` anunciado |
 | Última modificación | 25/10/2026 08:36 GMT. Es del mismo día de la página, así que **parece diario** (se confirma observando varios días) |
-| Descarga | 52.6 s a unos 7.5 MB/s |
+| Descarga | 52.6 s y 57.7 s en dos descargas, a unos 7 MB/s |
 | Contenido | **1 solo archivo:** `padron_reducido_ruc.txt`, **1,578,572,502 bytes (1.47 GiB)** descomprimido. Se lee en streaming, sin descomprimir a disco |
 | Archivo anexo (locales) | `padron_reducido_local_anexo.zip`, 14,068,105 bytes. No se usa por ahora |
-| Procesamiento | Leer las **18,486,442 filas** en streaming y contar valores tomó **26 s**. La memoria no se midió, pero no se cargó nada en RAM salvo contadores |
+| Procesamiento | Leer las **18,486,442 filas** en streaming tomó **26 s**. La memoria no se midió, pero no se cargó nada en RAM salvo contadores |
 
 ### 3.2 Formato
 
 | Aspecto | Valor |
 | --- | --- |
-| Codificación | **No es UTF-8**: el 6.0 % de las líneas (1,117,169) no son UTF-8 válido. Se decodifica como **ISO-8859-1 / `latin-1`** (por verificar con nombres con Ñ y tildes) |
+| Codificación | **No es UTF-8**: el 6.0 % de las líneas (1,117,169) no son UTF-8 válido. Se decodifica como **ISO-8859-1 / `latin-1`** |
 | Delimitador | `\|` (barra vertical) |
 | Fin de línea | `LF`. Sin BOM |
 | Cabecera | Sí, una línea |
@@ -93,14 +138,16 @@ Campos, en orden: `RUC` · `NOMBRE O RAZÓN SOCIAL` · `ESTADO DEL CONTRIBUYENTE
 | Prefijo `15` | 467,991 |
 | Prefijo `17` | 93,791 |
 | Prefijo `00` | 27 |
-| Filas **sin ubigeo** (`-`) | 15,760,371 (85.3 %). Coincide con el peso de los RUC `10`: parece que **a las personas naturales no se les publica el domicilio** (por confirmar) |
+| Filas **sin ubigeo** (`-`) | 15,760,371 (85.3 %) |
 | Filas con ubigeo de 6 dígitos | 2,726,066 |
+
+**A las personas naturales no se les publica el domicilio.** Se confirmó con la lista: de los 2,924 importadores naturales activos y habidos, 2,912 no tienen ubigeo.
 
 ### 3.4 Valores de estado y condición
 
 **Los valores vienen truncados a 20 caracteres.** Por eso aparecen cosas como `BAJA PROV. POR OFICI` o `NO HALLADO SE MUDO D`. El filtro compara con los valores exactos `ACTIVO` y `HABIDO`, que no se truncan.
 
-**Estado del contribuyente** (todas las filas):
+**Estado del contribuyente** (todas las filas del padrón):
 
 | Valor | Filas |
 | --- | ---: |
@@ -120,7 +167,7 @@ Campos, en orden: `RUC` · `NOMBRE O RAZÓN SOCIAL` · `ESTADO DEL CONTRIBUYENTE
 | `ANUL.PROVI.-ACTO ILI` | 43 |
 | `ANULACION - ACTO ILI` | 17 |
 
-**Condición de domicilio** (todas las filas):
+**Condición de domicilio** (todas las filas del padrón):
 
 | Valor | Filas |
 | --- | ---: |
@@ -132,7 +179,7 @@ Campos, en orden: `RUC` · `NOMBRE O RAZÓN SOCIAL` · `ESTADO DEL CONTRIBUYENTE
 | `PENDIENTE` | 25,268 |
 | `POR VERIFICAR` | 2,344 |
 
-**Combinaciones en RUC `20`** (personas jurídicas), las más frecuentes:
+**Combinaciones en RUC `20` de todo el padrón**, las más frecuentes:
 
 | Estado | Condición | Filas | % de los RUC `20` |
 | --- | --- | ---: | ---: |
@@ -142,24 +189,84 @@ Campos, en orden: `RUC` · `NOMBRE O RAZÓN SOCIAL` · `ESTADO DEL CONTRIBUYENTE
 | `SUSPENSION TEMPORAL` | `HABIDO` | 63,546 | 2.7 % |
 | `ACTIVO` | `NO HABIDO` | 15,259 | 0.6 % |
 
-Dos lecturas útiles:
+## 4. Cruce lista × padrón: el embudo real
 
-- **Más de 6 de cada 10 personas jurídicas del padrón están de baja o suspendidas.** Aparecer en una lista no dice nada de la vigencia, como ya se veía en tu primer ejemplo.
-- La combinación `BAJA DE OFICIO` + `HABIDO` es **más frecuente** que `ACTIVO` + `HABIDO`. Por eso el filtro por estado es indispensable y filtrar solo por condición dejaría pasar casi la mitad de basura.
+**26,002 de los 26,003 RUC de la lista aparecen en el padrón** (el que falta es un RUC `20`, probablemente el mismo que tiene el dígito verificador inválido, por confirmar).
 
-## 4. Ajustes a los documentos que salen de este spike
+### 4.1 Estado y condición de los importadores
+
+| Estado | RUC | % |
+| --- | ---: | ---: |
+| `ACTIVO` | 11,726 | 45.1 % |
+| `BAJA DE OFICIO` | 11,536 | 44.4 % |
+| `BAJA DEFINITIVA` | 2,194 | 8.4 % |
+| `SUSPENSION TEMPORAL` | 426 | 1.6 % |
+| `BAJA PROV. POR OFICI` | 105 | 0.4 % |
+| Otros (`BAJA PROVISIONAL`, `OTROS OBLIGADOS`, `BAJA MULT.INSCR. Y O`) | 15 | 0.1 % |
+
+| Condición | RUC |
+| --- | ---: |
+| `HABIDO` | 19,472 |
+| `NO HABIDO` | 6,416 |
+| Otras (`NO HALLADO …` en varias variantes, `PENDIENTE` y similares) | 114 |
+
+**Casi la mitad de la lista está de baja** (44.4 % de oficio y 8.4 % definitiva). Mira la combinación: hay **11,726 `ACTIVO`**, pero solo **11,459 son también `HABIDO`**. Esos 267 `ACTIVO` + no habido son los que el filtro de condición deja fuera.
+
+### 4.2 El embudo
+
+| Paso | RUC | % de los únicos |
+| --- | ---: | ---: |
+| Filas de la lista | 26,297 | — |
+| **RUC únicos** | **26,003** | 100 % |
+| Encontrados en el padrón | 26,002 | 100.0 % |
+| **`ACTIVO` + `HABIDO` (elegibles)** | **11,459** | **44.1 %** |
+| ↳ personas jurídicas (`20`) | 8,440 | 32.5 % |
+| ↳ personas naturales (`10`) | 2,924 | 11.2 % |
+| ↳ prefijos `15` y `17` | 95 | 0.4 % |
+
+### 4.3 Dónde están los elegibles
+
+| Ubigeo (2 primeros dígitos) | RUC |
+| --- | ---: |
+| `15` Lima | 6,945 |
+| Sin ubigeo (casi todos personas naturales) | 3,006 |
+| `07` Callao | 379 |
+| `04` Arequipa | 244 |
+| `13` La Libertad | 123 |
+| `20` Piura | 90 |
+| `23` Tacna | 79 |
+| `16` Loreto | 77 |
+
+- **Lima + Callao: 7,324** (63.9 % de los elegibles).
+- Entre las **personas jurídicas elegibles, 7,314 de 8,440 (86.7 %) están en Lima o Callao.**
+
+### 4.4 Cuánto tardaría la consulta puntual
+
+A 400 consultas por día (tope por defecto, `docs/03` RNF-COR-03), con unos 9 segundos entre una y otra (≈ 1 hora de trabajo al día):
+
+| Alcance | RUC | Días |
+| --- | ---: | ---: |
+| Todos los elegibles | 11,459 | ≈ 29 |
+| Solo personas jurídicas | 8,440 | ≈ 21 |
+| Personas jurídicas en Lima y Callao | 7,314 | ≈ 18 |
+
+Por eso la **priorización** importa: con las primeras 400 a 800 consultas, bien elegidas, ya se debería tener una lista corta usable. Las señales baratas que quedan son el tipo de RUC, Lima/Callao y las palabras clave del nombre. La señal de «actualización reciente» no sirve (§2.4).
+
+## 5. Ajustes a los documentos que salen de este spike
 
 | Documento | Ajuste |
 | --- | --- |
-| `docs/01` §2.1, §2.2, §8 (R-01), glosario | Acceso a Aduanet, formato real del padrón, valores truncados |
-| `docs/03` §1 | Volumen del padrón (18.5 M) y proporción ACTIVO + HABIDO medida |
-| `docs/04` §5.4, §6.3 | Lectura del padrón (codificación, delimitador, normalización, cuarentena) y `PADRON_URL` |
-| `docs/05` §4 | Normalización de `estado`, `condicion` y `ubigeo` |
-| `docs/10` §4 | Estado de cada tarea del spike |
+| `docs/01` | Dirección correcta (`CGLisImp`), cifras de la lista, D-19 y D-20, riesgo R-01 y criterios de puntaje |
+| `docs/02` | RF-ING-03 (nombre de la fila más reciente), RF-FIL-03 (sin la señal de Aduanet), AC-08 y AC-12 con los nuevos pesos |
+| `docs/03` | Volúmenes medidos y días de consulta |
+| `docs/04` | La lista se descarga directo (con archivo como alternativa), dirección correcta y prioridad sin la señal de Aduanet |
+| `docs/05` | Perfil de puntaje v1 sin el criterio de Aduanet |
+| `docs/06`, `docs/08` | Ejemplos con el nuevo puntaje |
+| `docs/10` | Estado del spike |
 
-## 5. Siguientes pasos
+## 6. Siguientes pasos
 
-1. Guardar la lista de Aduanet (§2.3) y contarme cómo llegaste a ella.
-2. Con la lista: SP-01 y SP-05 (tamaño real del embudo). El padrón hay que bajarlo de nuevo para el cruce (1 minuto, 376 MB) y se vuelve a mover a la Papelera.
-3. Tú haces las 20 consultas manuales (SP-06) y guardas cada página completa.
-4. Cerrar el informe con las decisiones para la puerta G0.
+1. **Exportar el primer CSV (hito H1):** los 11,459 elegibles con razón social, tipo, estado, condición, departamento y prioridad, para que los puedas abrir en Excel.
+2. Tú haces las 20 consultas manuales (SP-06) y guardas cada página completa. Con eso cerramos SP-07 y calibramos la lectura de la ficha.
+3. Leer la política de privacidad de SUNAT (SP-09) y medir la huella en disco (SP-11).
+4. Cerrar este informe con la puerta G0, que ya se cumple en lo esencial: se llega a las dos fuentes masivas desde tu Mac.

@@ -93,7 +93,7 @@ Muestra el embudo, las cifras clave y los avisos. Un selector de perfil cambia l
 ├──────┬───────────────────────────────┬──────┬────────┬────────┬────────────┤
 │ Nivel│ Razón social · RUC            │Punt. │ Estado │Condic. │ Rubro      │
 ├──────┼───────────────────────────────┼──────┼────────┼────────┼────────────┤
-│ [A]  │ EMPRESA EJEMPLO S.A.C.        │ 85   │ACTIVO  │HABIDO  │ 4652 princ.│
+│ [A]  │ EMPRESA EJEMPLO S.A.C.        │ 95   │ACTIVO  │HABIDO  │ 4652 princ.│
 │      │ 20123456789 · Lima · 8 años   │ ▰▰▰▰▱│        │        │            │
 │ [B]  │ OTRA IMPORTADORA S.R.L.       │ 64   │ACTIVO  │HABIDO  │ 4741 sec.  │
 │ [ ]  │ SERVICIOS GENERALES … E.I.R.L │ —    │BAJA DE │HABIDO  │ Descartado │
@@ -118,13 +118,13 @@ Muestra el embudo, las cifras clave y los avisos. Un selector de perfil cambia l
 │ 20123456789 [copiar]  ·  Lima  ·  Inscrita 12/03/2015 (11 años)            │
 │ [Agregar a proveedores]  [Reconsultar]  [Ver en SUNAT ↗]  [Excluir…]       │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Puntaje: 85 / 100  · Perfil Smartphones / iPhone v1                        │
-│  Rubro               40/40  4652 actividad principal, peso 1.0             │
-│  Antigüedad          20/20  11 años                                        │
+│ Puntaje: 95 / 100  · Perfil Smartphones / iPhone v1                        │
+│  Rubro               45/45  4652 actividad principal, peso 1.0             │
+│  Antigüedad          25/25  11 años                                        │
 │  Forma societaria    10/10  S.A.C.                                         │
 │  Comprobantes         5/10  factura (sin emisión electrónica)              │
-│  Aduanet              0/10  actualizado hace 6 años                        │
 │  Logística           10/10  ubigeo 15 (Lima)                               │
+│                                                                            │
 │ ⓘ El nivel es una señal pública. No garantiza autenticidad de los equipos. │
 ├────────────────────────────────────────────────────────────────────────────┤
 │ [Datos SUNAT]  [Actividades]  [Historial]  [Tareas]                        │
@@ -175,7 +175,7 @@ Vista de **lista agrupada por estado** (también hay vista de tablero). Se puede
 │ Proveedores   [Lista | Tablero]   Categoría: [Todas ▾]   [Exportar]       │
 │ Candidatos 12 │ Contactados 6 │ Cotizaron 3 │ En verificación 2 │ Aprobados 1│
 │ ──────────────────────────────────────────────────────────────────────────│
-│ EMPRESA EJEMPLO S.A.C.  [A 85]  iPhone, laptops  Contactado hace 2 días    │
+│ EMPRESA EJEMPLO S.A.C.  [A 95]  iPhone, laptops  Contactado hace 2 días    │
 │ OTRA IMPORTADORA S.R.L. [B 64]  Cotizó: iPhone 14 Pro reacond. US$680      │
 └────────────────────────────────────────────────────────────────────────────┘
 ```

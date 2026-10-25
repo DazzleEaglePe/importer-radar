@@ -222,6 +222,7 @@ CREATE INDEX ix_status_hist ON ruc_status_history (ruc, observed_at DESC);
 - Valores de `estado` y `condicion`: se guardan **tal como vienen en el padrón** (en mayúsculas, sin espacios sobrantes y **truncados a 20 caracteres** por SUNAT, por ejemplo `BAJA PROV. POR OFICI`). El filtro compara con los valores exactos `ACTIVO` y `HABIDO`. Lista real en `docs/12` §3.4.
 - `ubigeo` y los demás campos que el padrón trae como `-` se guardan como **nulos**. El 85 % de las filas del padrón no trae ubigeo (probablemente las personas naturales), así que el criterio de logística da 0 puntos cuando falta.
 - Las filas del padrón con distinto número de columnas o con un RUC que no tenga 11 dígitos se registran en `invalid_rows` y no se cargan.
+- `aduanet_last_update` se conserva como dato informativo, pero **no entra al puntaje** (D-20). Si un RUC aparece repetido, `razon_social` sale de **la fila con la fecha más reciente**.
 
 ## 5. Consultas y fichas
 
@@ -357,14 +358,14 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
     "comercio_exterior_requiere": ["IMPORTADOR"]
   },
   "criteria": {
-    "rubro": { "max": 40, "secondary_factor": 0.8 },
+    "rubro": { "max": 45, "secondary_factor": 0.8 },
     "antiguedad": {
-      "max": 20,
+      "max": 25,
       "steps": [
         { "min_years": 0, "points": 0 },
-        { "min_years": 1, "points": 8 },
-        { "min_years": 3, "points": 14 },
-        { "min_years": 5, "points": 20 }
+        { "min_years": 1, "points": 10 },
+        { "min_years": 3, "points": 18 },
+        { "min_years": 5, "points": 25 }
       ]
     },
     "forma_societaria": {
@@ -372,10 +373,6 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
       "values": { "SA": 10, "SAC": 10, "SRL": 10, "EIRL": 6, "NATURAL": 3 }
     },
     "comprobantes": { "max": 10, "factura": 5, "electronico": 5 },
-    "aduanet": {
-      "max": 10,
-      "steps": [ { "max_years": 2, "points": 10 }, { "max_years": 5, "points": 5 } ]
-    },
     "logistica": { "max": 10, "ubigeo_prefixes": ["15", "07"] }
   },
   "tiers": { "A": 75, "B": 55, "C": 35 },
@@ -396,11 +393,10 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
 {
   "gates": { "estado": "pass", "condicion": "pass", "comercio_exterior": "pass" },
   "items": [
-    { "key": "rubro",            "points": 40, "max": 40, "note": "4652 principal, peso 1.0" },
-    { "key": "antiguedad",       "points": 20, "max": 20, "note": "7.2 años" },
+    { "key": "rubro",            "points": 45, "max": 45, "note": "4652 principal, peso 1.0" },
+    { "key": "antiguedad",       "points": 25, "max": 25, "note": "7.2 años" },
     { "key": "forma_societaria", "points": 10, "max": 10, "note": "SAC" },
     { "key": "comprobantes",     "points": 10, "max": 10, "note": "factura, emisor electrónico" },
-    { "key": "aduanet",          "points": 10, "max": 10, "note": "actualizado hace 1.0 año" },
     { "key": "logistica",        "points": 10, "max": 10, "note": "ubigeo 15 (Lima)" }
   ],
   "total": 100,

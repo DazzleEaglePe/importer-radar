@@ -10,15 +10,15 @@
 
 | Dato | Supuesto | Estado |
 | --- | --- | --- |
-| Filas en la lista de Aduanet | 20 000 a 100 000 | **Por medir** en el spike |
-| RUC únicos tras deduplicar | 70 % a 90 % de las filas | Por medir |
+| Filas en la lista de Aduanet | **26,297** | Medido el 25/10/2026 |
+| RUC únicos tras deduplicar | **26,003** (98.9 % de las filas) | Medido |
 | Registros del padrón reducido | **18,486,442** | Medido el 25/10/2026 |
-| Importadores ACTIVO + HABIDO | Referencia medida: **36.8 %** de los RUC `20` del padrón (871,239 de 2,368,713). En la lista de Aduanet, por medir | Parcial |
+| Importadores ACTIVO + HABIDO | **11,459** (44.1 % de los RUC únicos): 8,440 personas jurídicas, 2,924 naturales y 95 de otros prefijos | Medido |
 | Usuarios del panel | 1 (tú) | Confirmado |
 | Usuarios simultáneos | 1 | Derivado |
 | Consultas RUC por día | 300 a 500 | Propuesto (ritmo cortés) |
 
-**Consecuencia del volumen:** a 6 a 12 segundos por consulta se hacen unas 300 a 600 por hora de trabajo continuo, pero el tope diario de 400 es el límite real. Consultar 15 000 RUC llevaría **semanas**. Por eso el diseño es: filtrar en masa, **priorizar** y **parar cuando ya hay suficientes nivel A**, no consultar todo.
+**Consecuencia del volumen:** a 6 a 12 segundos por consulta se hacen unas 300 a 600 por hora de trabajo continuo, pero el tope diario de 400 es el límite real. Consultar los 11,459 elegibles llevaría **unos 29 días** (unos 21 si solo se consultan las personas jurídicas). Por eso el diseño es: filtrar en masa, **priorizar** y **parar cuando ya hay suficientes nivel A**, no consultar todo.
 
 ## 2. Rendimiento
 

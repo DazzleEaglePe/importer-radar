@@ -32,7 +32,7 @@ Cargar lista Aduanet → Cruzar con padrón → Cola de consultas RUC → Puntaj
 | --- | --- | --- | --- |
 | RF-ING-01 | Importar la lista de Aduanet, ya sea descargándola de su URL o **cargando un archivo guardado** (HTML o CSV). Extraer RUC, razón social y fecha de última actualización | M | H1 |
 | RF-ING-02 | Normalizar la razón social (mayúsculas, sin comillas ni espacios sobrantes, sin tildes para búsqueda) y **conservar el texto original** | M | H1 |
-| RF-ING-03 | **Deduplicar por RUC**: quedarse con la fecha de última actualización más reciente y contar cuántas veces aparece | M | H1 |
+| RF-ING-03 | **Deduplicar por RUC**: quedarse con la fecha de última actualización más reciente **y con el nombre de esa misma fila** (hay RUC repetidos con nombres distintos), y contar cuántas veces aparece | M | H1 |
 | RF-ING-04 | Validar cada RUC: 11 dígitos, prefijo válido (`10`, `15`, `16`, `17`, `20`) y **dígito verificador (módulo 11)**. Las filas inválidas van a una lista de cuarentena con el motivo, no se descartan en silencio | M | H1 |
 | RF-ING-05 | Registrar cada ingesta como **snapshot**: fuente, fecha declarada por la fuente, fecha de descarga, hash del archivo, total de filas, filas nuevas e inválidas. Si el hash ya existe, avisar y no reprocesar | M | H1 |
 | RF-ING-06 | Importar el **padrón reducido** (descarga o archivo) en **streaming**, guardando solo las filas cuyo RUC está en nuestra lista. Conservar estado, condición, ubigeo y dirección fiscal | M | H1 |
@@ -46,7 +46,7 @@ Cargar lista Aduanet → Cruzar con padrón → Cola de consultas RUC → Puntaj
 | --- | --- | --- | --- |
 | RF-FIL-01 | Descartar automáticamente, con **motivo registrado**, a toda empresa cuyo estado no sea `ACTIVO` (`ESTADO_NO_ACTIVO`) o cuya condición no sea `HABIDO` (`CONDICION_NO_HABIDO`) | M | H1 |
 | RF-FIL-02 | Mostrar el **embudo** con conteos por etapa y por motivo de descarte | M | H1 (CLI), H3 (panel) |
-| RF-FIL-03 | **Priorizar** la cola de consultas con señales baratas: RUC `20`, Lima/Callao, actualización reciente en Aduanet y palabras clave en la razón social (por ejemplo `TECH`, `CELULAR`, `TELECOM`, `COMPUTER`, `DIGITAL`, `ELECTRON`, `MOBILE`). Las palabras clave **suben prioridad, nunca excluyen** | S | H2 |
+| RF-FIL-03 | **Priorizar** la cola de consultas con señales baratas: RUC `20`, Lima/Callao y palabras clave en la razón social (por ejemplo `TECH`, `CELULAR`, `TELECOM`, `COMPUTER`, `DIGITAL`, `ELECTRON`, `MOBILE`). Las palabras clave **suben prioridad, nunca excluyen** | S | H2 |
 | RF-FIL-04 | Los umbrales y las listas de palabras son **configurables** sin tocar código | S | H2 |
 
 ### 3.3 Consulta RUC (CON)
@@ -172,8 +172,8 @@ Los casos usan datos reales de tus capturas como material de prueba (solo RUC, e
 - *Entonces* la consulta queda `FAILED` con motivo `PARSE_ERROR`, **no se actualiza** la ficha existente y se genera una alerta.
 
 **AC-08 · Puntaje explicable (RF-PUN-03)**
-- *Dado* un importador activo y habido con actividad principal `4652`, inscrito hace 7 años, S.A.C., autorizado a facturar y con emisión electrónica, domicilio en Lima y actualización en Aduanet de hace 1 año,
-- *Entonces* el puntaje es **40 + 20 + 10 + 10 + 10 + 10 = 100**, nivel A, y el desglose muestra cada línea.
+- *Dado* un importador activo y habido con actividad principal `4652`, inscrito hace 7 años, S.A.C., autorizado a facturar y con emisión electrónica y domicilio en Lima,
+- *Entonces* el puntaje es **45 + 25 + 10 + 10 + 10 = 100**, nivel A, y el desglose muestra cada línea.
 
 **AC-09 · Recalcular sin consultar (RF-PUN-04)**
 - *Dado* un cambio de peso del código `4741` de 0.6 a 0.8,
@@ -191,5 +191,5 @@ Los casos usan datos reales de tus capturas como material de prueba (solo RUC, e
 - *Entonces* recibe un error de permisos y queda registrado en la auditoría.
 
 **AC-12 · Tope por antigüedad (RF-PUN-06)**
-- *Dado* un importador `ACTIVO` y `HABIDO` con 3 años de inscrito, actividad principal `4652`, S.A.C., facturación electrónica, domicilio en Lima y actualización en Aduanet de hace 1 año (puntaje **94**: 40 + 14 + 10 + 10 + 10 + 10),
-- *Entonces* su nivel es **B** y no A. El puntaje sigue siendo 94 y el desglose muestra `tier_cap` con la regla aplicada.
+- *Dado* un importador `ACTIVO` y `HABIDO` con 3 años de inscrito, actividad principal `4652`, S.A.C., facturación electrónica, y domicilio en Lima (puntaje **93**: 45 + 18 + 10 + 10 + 10),
+- *Entonces* su nivel es **B** y no A. El puntaje sigue siendo 93 y el desglose muestra `tier_cap` con la regla aplicada.

@@ -70,5 +70,5 @@ Lista Aduanet  →  Padrón reducido SUNAT  →  Consulta RUC puntual  →  Punt
 ## Próximos pasos
 
 1. Preguntas abiertas: respondidas el 25/10. Quedan tres matices en `docs/01-contexto-y-analisis.md` §9.3.
-2. Cerrar el **spike de la semana 1** (`docs/12`): el padrón ya está medido (18.5 millones de filas). Falta que **guardes la lista de Aduanet** desde tu navegador, porque la descarga directa da 404.
+2. Terminar el **spike de la semana 1** (`docs/12`): ya están medidos el padrón y la lista de Aduanet (26,003 RUC únicos, **11,459 `ACTIVO` + `HABIDO`**). Faltan las 20 consultas manuales de RUC, que haces tú.
 3. Entregar primero un **CSV filtrado sin interfaz** (hito H1). Con eso ya puedes empezar a contactar proveedores mientras se construye el panel.

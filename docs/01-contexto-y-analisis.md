@@ -22,16 +22,16 @@ El trabajo es **automatizar el cruce** de ambas para no revisar la lista uno por
 
 | Aspecto | Lo que vimos |
 | --- | --- |
-| URL | `http://www.aduanet.gob.pe/servlet/CGListImp?flag=1&nom` (HTTP, sin cifrado: el navegador la marca «No seguro») |
+| URL | `http://www.aduanet.gob.pe/servlet/CGLisImp?flag=1&nom` (HTTP sin cifrado: el puerto 443 no responde y el navegador la marca «No seguro»). Ojo: el nombre es `CGLisImp`, **sin «t»** |
 | Título | *Actualización de datos del importador · R.M. 058-2001/EF* |
 | Columnas | `RUC` · `IMPORTADOR` (razón social) · `ULT.ACT.` (fecha de última actualización, `dd/mm/aaaa`) |
-| Orden | Alfabético por razón social: primero símbolos y comillas, luego números, luego letras |
-| Estructura | Una sola tabla larga en una página. No vimos paginación ni filtros en la captura |
-| Calidad | Razón social con comillas y espacios sobrantes (`" SERVICIOS GENERALES HUZA & OÑA E.I.R.L "`). **RUC repetidos**: `20526185847` aparece 4 veces (27/01/2014 y tres veces 24/01/2014). Mezcla de RUC `20…` (personas jurídicas) y `10…` (personas naturales con negocio) |
-| Tamaño | **Desconocido.** Hay que medirlo en el spike |
-| Acceso | Desde el entorno de desarrollo el servidor **rechazó la conexión** (`ECONNREFUSED`). Desde tu Mac el servidor responde, pero **la dirección de la lista da 404 al acceso directo**, con `curl` y con un Chrome sin sesión previa (`docs/12` §2). Tu pestaña la cargó porque llegaste por otro camino. Falta guardar la página para medir su tamaño |
+| Orden | **Aproximadamente** alfabético por razón social (1,560 descensos en 26,296 pares de filas consecutivas). No conviene depender del orden |
+| Estructura | Una sola página de 5.5 MB con una tabla de 3 celdas por fila (RUC, razón social, fecha). Sin paginación ni filtros. Codificación declarada: `windows-1252` |
+| Calidad | Razón social con comillas o espacios sobrantes (17 con comillas), 445 nombres con caracteres no ASCII y 1 nombre idéntico a su RUC. **RUC repetidos:** 294 filas sobrantes (1.1 %), 222 RUC con nombres distintos entre sus filas y 180 con fechas distintas. 1 RUC con dígito verificador inválido. Mezcla de RUC `20…` (78.4 %), `10…` (20.8 %), `15…` y `17…` |
+| Tamaño | **26,297 filas de datos y 26,003 RUC únicos** (medido el 25/10/2026) |
+| Acceso | Un `GET` simple responde **HTTP 200 en 2.8 s** (5.5 MB), sin cookies ni sesión (`docs/12` §2). Mis primeros 404 fueron un error de tipeo mío en la dirección. El rechazo de conexión que vi al inicio se debe a que mi herramienta de lectura fuerza HTTPS y el sitio no lo atiende |
 
-**Corrección importante al planteamiento inicial:** esta lista **no es «los importadores más grandes del Perú»**. Es la relación de quienes *actualizaron sus datos* como importadores, ordenada alfabéticamente. No trae volumen, montos ni productos. Sirve como **universo de empresas registradas como importadoras**, no como ranking.
+**Corrección importante al planteamiento inicial:** esta lista **no es «los importadores más grandes del Perú»**. Es la relación de quienes *actualizaron sus datos* como importadores, ordenada aproximadamente por nombre. No trae volumen, montos ni productos. Sirve como **universo de empresas registradas como importadoras**, no como ranking. Además, sus fechas de «última actualización» van de 2001 a 2020 y el 99.1 % de las filas son de 2001 a 2009, así que **no indican vigencia** (`docs/12` §2.4).
 
 ### 2.2 Padrón reducido del RUC (descarga masiva)
 
@@ -115,7 +115,8 @@ Un panel web interno con un **pipeline automático** y una **vista de revisión*
 | D-16 | Categorías: **iPhone primero**, después laptops Apple, accesorios y cargadores, repuestos y baterías. Cuatro perfiles de partida | Tu respuesta 25/10 |
 | D-17 | El nombre **Radar de Importadores** queda confirmado | Tu respuesta 25/10 |
 | D-18 | Los términos de las fuentes se revisan en lo posible (§9.1). Las consultas manuales del spike las haces **tú**, no yo, porque el `robots.txt` de la consulta RUC bloquea a los agentes de Anthropic | Revisión del 25/10 |
-| D-19 | La lista de Aduanet se carga desde un **archivo que guardas tú** desde tu navegador. La descarga automática da 404 y no se intentará esquivar | Spike 25/10 (`docs/12` §2) |
+| D-19 | La lista de Aduanet se **descarga con una solicitud simple** (`GET`, sin sesión) y también se puede **cargar desde un archivo guardado**, como alternativa | Spike 25/10 (`docs/12` §2) |
+| D-20 | Se **quita del puntaje** el criterio «actualización en Aduanet»: 99.1 % de las fechas son de 2001 a 2009. Sus 10 puntos pasan 5 al rubro y 5 a la antigüedad | Spike 25/10 (`docs/12` §2.4) |
 
 ## 6. Cómo se decide qué es «confiable» (propuesto)
 
@@ -132,12 +133,13 @@ Se separa en **filtros eliminatorios** (si fallan, la empresa se descarta del to
 
 | Criterio | Máx. | Cómo se calcula |
 | --- | --- | --- |
-| Rubro (CIIU) | 40 | Peso del mejor código relevante. La actividad principal cuenta completa; una secundaria, al 80 % |
-| Antigüedad | 20 | Años desde la inscripción: menos de 1 → 0 · 1 a 3 → 8 · 3 a 5 → 14 · 5 o más → 20 |
+| Rubro (CIIU) | 45 | Peso del mejor código relevante. La actividad principal cuenta completa; una secundaria, al 80 % |
+| Antigüedad | 25 | Años desde la inscripción: menos de 1 → 0 · 1 a 3 → 10 · 3 a 5 → 18 · 5 o más → 25 |
 | Forma societaria | 10 | S.A., S.A.C., S.R.L. → 10 · E.I.R.L. → 6 · persona natural → 3 |
 | Formalidad de comprobantes | 10 | Autorizada a emitir factura → 5 · emisor electrónico → 5 |
-| Actualización en Aduanet | 10 | Última actualización de hasta 2 años → 10 · hasta 5 → 5 · más antigua → 0 |
 | Cercanía logística | 10 | Domicilio fiscal en Lima o Callao (ubigeo `15` o `07`) → 10 |
+
+> **Cambio del 25/10 (D-20):** se quitó el criterio «actualización en Aduanet» (10 puntos). Las fechas de esa lista son de 2001 a 2009 casi sin excepción, así que daría 0 a todas las empresas. Sus puntos pasaron 5 al rubro y 5 a la antigüedad (`docs/12` §2.4).
 
 **Niveles:** A ≥ 75 · B 55–74 · C 35–54 · D < 35.
 
@@ -183,7 +185,7 @@ Cada categoría tiene su propio perfil, con los mismos criterios pero distinto p
 
 | ID | Riesgo | Prob. | Impacto | Mitigación |
 | --- | --- | --- | --- | --- |
-| R-01 | Aduanet o SUNAT rechazan o limitan las conexiones automáticas | **Alta para la lista de Aduanet** (404 al acceso directo, `docs/12` §2). Media para el padrón (la descarga directa funcionó) | Alto | Todo corre en tu Mac. **La lista se carga desde un archivo que guardas tú.** No se prueban cabeceras ni cookies para esquivar el control |
+| R-01 | Aduanet o SUNAT rechazan o limitan las conexiones automáticas | **Baja por ahora:** la lista (200 en 2.8 s) y el padrón se descargaron con solicitudes simples. Falta ver cómo responde la consulta RUC individual | Alto | Todo corre en tu Mac, con ritmo cortés. Carga desde archivo guardado como alternativa. No se esquivan controles |
 | R-02 | La consulta RUC pide captcha o limita el volumen | Alta | Alto | Prefiltro en masa con el padrón, cola priorizada, ritmo bajo, pausa automática y **fallback manual**. Opción de proveedor de pago intercambiable |
 | R-03 | Cambia el HTML de SUNAT y el parser devuelve datos erróneos | Media | Alto | Parsers con pruebas sobre HTML guardado, validación estricta y alerta. Un parseo que falla **no guarda datos basura** |
 | R-04 | Se interpreta el puntaje como garantía y se compra a un estafador | Media | Muy alto | Mensajes claros en la interfaz, lista de verificación obligatoria antes de «Aprobar», y no usar el nombre «confiable» como sello |
