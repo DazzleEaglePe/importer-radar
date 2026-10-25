@@ -9,6 +9,7 @@ Se ejecutan con `python3 -I` (modo aislado) y reciben las rutas como argumentos.
 | `padron_stats.py` | Formato, codificación y conteos del padrón reducido (en streaming, sin descomprimir a disco) | `padron_reducido_ruc.zip` |
 | `aduanet_stats.py` | Filas, duplicados, RUC inválidos y fechas de la lista de Aduanet. Escribe los RUC únicos **sin nombres** | `lista.html` `rucs.tsv` |
 | `padron_cross.py` | Cruza los RUC de la lista con el padrón y cuenta ACTIVO + HABIDO. Escribe los elegibles **sin nombres** | `padron.zip` `rucs.tsv` `elegibles.tsv` |
+| `pick_sp06_sample.py` | Arma la muestra de 20 RUC variados (S.A.C., S.A., E.I.R.L., S.R.L., sucursal, con y sin palabras clave, Lima y provincias, 2 personas naturales) para las consultas manuales | `importadores_activo_habido.csv` `salida.csv` |
 | `export_h1_csv.py` | Genera el CSV de importadores `ACTIVO` + `HABIDO` con razón social, tipo, estado, condición, departamento y prioridad | `lista.html` `elegibles.tsv` `salida.csv` |
 
 ## Orden de uso

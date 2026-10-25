@@ -264,7 +264,34 @@ Por eso la **priorización** importa: con las primeras 400 a 800 consultas, bien
 | `docs/06`, `docs/08` | Ejemplos con el nuevo puntaje |
 | `docs/10` | Estado del spike |
 
-## 6. Siguientes pasos
+## 6. Guía para las consultas manuales de RUC (SP-06)
+
+**Para qué sirven estas 20 páginas:**
+1. Ver **todos los campos** de la ficha completa, incluida la emisión electrónica que no se alcanzó a ver en la captura.
+2. Armar los *fixtures* con los que se probará el parser (`docs/10` §6).
+3. Medir **cuántas veces pide SUNAT una verificación humana** (SP-07).
+
+**La lista:** `data/processed/aduanet/2026-10-25/sp06_muestra_20_ruc.csv` (fuera de git). Trae 18 empresas y 2 personas naturales, con la columna `para_probar`, el nombre de archivo sugerido y dos columnas vacías para tus anotaciones. Cubre S.A.C. (5), S.A. (4), E.I.R.L. (4), S.R.L. (2), una sucursal de empresa extranjera y otras dos formas; con y sin palabras clave; Lima, Callao y 7 departamentos de provincia. Se regenera con `scripts/spike/pick_sp06_sample.py` (semilla fija).
+
+**Pasos, un RUC a la vez:**
+
+1. Abre la consulta de SUNAT en tu Chrome: `https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp`.
+2. En **Por RUC**, escribe el RUC de la lista y pulsa **Buscar**. Si SUNAT pide una verificación, resuélvela tú.
+3. Cuando cargue la ficha, baja hasta el final y usa **Archivo → Guardar página como…** con el formato **«Página web, completa»**. Ponle de nombre el RUC y guárdala en `bot-scraping/data/raw/consulta_ruc/2026-10-25/`. («Solo HTML» podría guardar una página vacía si la ficha se arma con JavaScript.)
+4. En la lista, anota en `pidio_verificacion` si fue **sí** o **no**, y en `observaciones` cualquier cosa rara.
+5. Pulsa **Volver** y sigue con el siguiente.
+
+**Reglas:**
+
+- Consulta **uno por uno**, con el ritmo normal de quien lo hace a mano (unos 10 segundos entre consultas).
+- Si aparece un bloqueo o un aviso de «demasiadas consultas», **detente**, anótalo y no insistas.
+- Sin extensiones ni scripts de automatización: son consultas manuales a propósito.
+
+**Qué hago yo:** no navego esa página (`docs/01` §9.1). Leo los archivos que guardes, extraigo los campos, comparo con `docs/05` §5 y armo los *fixtures*. Los de las personas naturales se vuelven sintéticos antes de entrar al repositorio, que es público (`docs/11` §10).
+
+**Qué me dices al terminar:** cuántas veces pidió verificación, si algún RUC dio un error y si falta algún campo que esperabas ver.
+
+## 7. Siguientes pasos
 
 1. **Primer CSV (hito H1, versión provisional): generado.** Los 11,459 elegibles con razón social, tipo, estado, condición, departamento y prioridad, en `data/processed/aduanet/2026-10-25/importadores_activo_habido.csv` (fuera de git), hecho con `scripts/spike/export_h1_csv.py`. La prioridad va de 0 a 100: 7,095 empresas quedan en 70 (personas jurídicas en Lima o Callao sin palabra clave), 1,103 en 40 y 3,009 en 0 (casi todas personas naturales). **Solo 242 nombres (2.1 %) traen una palabra clave de electrónica**: el nombre ayuda a ordenar la cola, pero **no reemplaza la consulta del rubro (CIIU)**.
 2. Tú haces las 20 consultas manuales (SP-06) y guardas cada página completa. Con eso cerramos SP-07 y calibramos la lectura de la ficha.
