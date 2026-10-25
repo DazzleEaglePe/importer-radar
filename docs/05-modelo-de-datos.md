@@ -287,12 +287,17 @@ CREATE TABLE ruc_profiles (                   -- la ficha vigente de cada RUC (u
   comercio_exterior        text[] NOT NULL DEFAULT '{}',   -- {'IMPORTADOR','EXPORTADOR'}
   sistema_contabilidad     text,
   comprobantes_autorizados text[] NOT NULL DEFAULT '{}',   -- {'FACTURA','BOLETA DE VENTA',…}
-  emisor_electronico_desde date,                           -- POR CONFIRMAR: no se ve en la captura
+  emisor_electronico_desde date,                           -- confirmado en fichas reales (20 de 21)
+  sistema_emision_electronica text[] NOT NULL DEFAULT '{}',
+  comprobantes_electronicos jsonb NOT NULL DEFAULT '[]',   -- [{"tipo": "FACTURA", "desde": "2018-01-10"}]
+  afiliado_ple_desde       date,
+  padrones                 text[] NOT NULL DEFAULT '{}',   -- «Incorporado al Régimen de Buenos Contribuyentes…», agentes de retención, etc.
+  tipo_documento           text,                           -- solo «DNI», «CE»… de las personas naturales; nunca el número ni el nombre
   fetched_at               timestamptz NOT NULL
 );
 
 CREATE TABLE ciiu_catalog (
-  code        char(4) PRIMARY KEY,
+  code        varchar(5) PRIMARY KEY,         -- 4 dígitos (CIIU Rev. 4); SUNAT también muestra códigos de 5 (Rev. 3)
   description text NOT NULL,
   relevance   text NOT NULL DEFAULT 'NONE' CHECK (relevance IN
               ('ELECTRONICS_CORE','ELECTRONICS_RETAIL','ELECTRONICS_RELATED','NONE')),
@@ -306,7 +311,7 @@ CREATE TABLE ruc_activities (
   ruc         char(11) NOT NULL REFERENCES importers(ruc),
   kind        text NOT NULL CHECK (kind IN ('PRINCIPAL','SECUNDARIA')),
   position    smallint NOT NULL DEFAULT 0,    -- 0 para la principal; 1, 2… para secundarias
-  ciiu_code   char(4) NOT NULL,
+  ciiu_code   varchar(5) NOT NULL,            -- 4 dígitos (Rev. 4) o 5 (Rev. 3)
   description text,
   UNIQUE (ruc, kind, position)
 );
@@ -315,9 +320,9 @@ CREATE INDEX ix_activities_ciiu ON ruc_activities (ciiu_code);
 
 **Notas:**
 
-- `ruc_activities.ciiu_code` **no** tiene clave foránea al catálogo. SUNAT puede devolver códigos que aún no cargamos; en ese caso cuentan con peso 0 y se muestran en una lista de «códigos sin clasificar» para revisarlos.
+- `ruc_activities.ciiu_code` **no** tiene clave foránea al catálogo. SUNAT puede devolver códigos que aún no cargamos; en ese caso cuentan con peso 0 y se muestran en una lista de «códigos sin clasificar» para revisarlos. En 2 de las 21 primeras fichas reales aparecieron **códigos de 5 dígitos** (de la revisión 3 de la CIIU), por eso la columna es `varchar(5)`.
 - Actualizar una ficha es **transaccional**: se reemplazan la fila de `ruc_profiles` y todas sus `ruc_activities` en una sola transacción. Si el parser falla, no se toca nada (RNF-DAT-03).
-- `emisor_electronico_desde` está pendiente: la captura se corta en «Comprobantes de pago» y no vimos los campos de emisión electrónica. Se confirma en el spike con la página completa.
+- Los campos de emisión electrónica **ya se confirmaron** con fichas reales (`docs/12` §7.1). `comercio_exterior` toma los valores reales `IMPORTADOR`, `EXPORTADOR` y `SIN ACTIVIDAD` (la ficha escribe `IMPORTADOR/EXPORTADOR` y se separa por `/`).
 
 ## 6. Puntaje
 

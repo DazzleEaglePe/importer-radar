@@ -15,12 +15,12 @@
 | SP-03 | Formato del padrón reducido | **Hecha** | §3 |
 | SP-04 | Valores de estado y condición | **Hecha** | §3.4 |
 | SP-05 | Cruce lista × padrón (tamaño real del embudo) | **Hecha** | **11,459 ACTIVO + HABIDO**, el 44.1 % (§4) |
-| SP-06 | 20 consultas de RUC | **Programa listo, falta tu corrida** | `scripts/spike/lookup_fetch.py`, con 29 pruebas: 16 de lógica y 13 del navegador contra una página local (§6.1) |
-| SP-07 | Frecuencia de verificación humana | **Pendiente** | Sale de SP-06 |
+| SP-06 | 20 consultas de RUC | **Hecha** | 21 de 21 fichas guardadas y leídas sin error (§7) |
+| SP-07 | Frecuencia de verificación humana | **Parcial** | **0 verificaciones en 21 consultas.** Con tan pocas no se puede concluir nada para lotes grandes |
 | SP-08 | Tabla CIIU oficial del INEI | **Pendiente** | — |
 | SP-09 | Términos de las fuentes | **Parcial** | `robots.txt` revisados (`docs/01` §9.1). Falta leer la política de privacidad de SUNAT |
 | SP-10 | Este informe | **En curso** | — |
-| SP-11 | Huella en disco | **Parcial** | Lista: 5.5 MB. Padrón: 376 MB comprimido. Falta medir Docker y la base de datos |
+| SP-11 | Huella en disco | **Parcial** | Lista: 5.5 MB. Padrón: 376 MB comprimido. Fichas: ≈ 30 KB cada una (las 11,459 serían ≈ 340 MB). Falta medir Docker y la base de datos |
 
 ## 2. Lista de importadores de Aduanet
 
@@ -304,9 +304,15 @@ python3 -m venv .venv
 
 **Qué se probó y qué no.** La lógica (ritmo, topes, reanudar, paradas) tiene 16 pruebas, y el navegador real tiene 13 pruebas contra una página **local** que imita el formulario y la ficha: ficha normal, formulario dentro de un iframe, respuesta lenta, RUC sin resultado, verificación (y la persona que la resuelve), bloqueo por texto y por HTTP 429, ficha que nunca aparece y formulario roto. Todas pasan, y ninguna tocó SUNAT. Eso **no garantiza** que SUNAT se comporte igual.
 
-**Es normal que la primera corrida falle en algún paso.** El programa se escribió a partir de tus capturas, sin ver la página por dentro (no puedo abrirla). Si no encuentra el campo o la ficha, guarda lo que vio como `<ruc>.error.html` y se detiene a los 3 errores. Me lo cuentas y lo ajusto con esos archivos.
+**Resultado de la primera corrida real (25/10/2026):** funcionó sin ajustes. 21 de 21 consultas `OK`, ninguna verificación y ningún error (§7). La lógica y el navegador se habían probado antes solo con una página local; lo que no se sabía era si SUNAT se comportaría igual, y se comportó.
 
-**Después de la primera corrida:** dime cuántas fichas guardó, cuántas veces pidió verificación y si algo falló. Con las fichas escribo el parser. Cuando funcione, el mismo programa se usa para los días siguientes con la lista completa (`--list …/importadores_activo_habido.csv --max 400`): a 400 por día, unos 29 días en total (§4.4).
+**Para un lote grande**, por ejemplo los 400 de mayor prioridad que falten (sin `--screenshot`: cada captura pesa ≈ 190 KB). Tarda unos 70 minutos, así que conviene impedir que el Mac se duerma con `caffeinate`:
+
+```bash
+caffeinate -i .venv/bin/python -I scripts/spike/lookup_fetch.py --list data/processed/aduanet/2026-10-25/importadores_activo_habido.csv --out data/raw/consulta_ruc/2026-10-25 --max 400
+```
+
+Salta las fichas que ya existen, así que se puede repetir cada día hasta cubrir la lista (≈ 29 días para los 11,459, §4.4).
 
 ### 6.2 Manual (alternativa)
 
@@ -319,11 +325,69 @@ Si prefieres hacerlas a mano, para cada RUC de la lista:
 
 Consulta una a la vez, con unos 10 segundos entre consultas, y detente si aparece un bloqueo.
 
-**Qué hago yo en ambos casos:** no navego esa página. Leo los archivos guardados, extraigo los campos, comparo con `docs/05` §5 y armo los *fixtures*. Los de las personas naturales se vuelven sintéticos antes de entrar al repositorio, que es público (`docs/11` §10).
+**Qué hago yo en ambos casos:** no navego esa página. Leo los archivos guardados, extraigo los campos con `scripts/spike/parse_ficha.py` y armo los *fixtures*. Los de las personas naturales se vuelven sintéticos antes de entrar al repositorio, que es público (`docs/11` §10).
 
-## 7. Siguientes pasos
+## 7. Resultados de la primera corrida real (SP-06 y SP-07)
 
-1. **Primer CSV (hito H1, versión provisional): generado.** Los 11,459 elegibles con razón social, tipo, estado, condición, departamento y prioridad, en `data/processed/aduanet/2026-10-25/importadores_activo_habido.csv` (fuera de git), hecho con `scripts/spike/export_h1_csv.py`. La prioridad va de 0 a 100: 7,095 empresas quedan en 70 (personas jurídicas en Lima o Callao sin palabra clave), 1,103 en 40 y 3,009 en 0 (casi todas personas naturales). **Solo 242 nombres (2.1 %) traen una palabra clave de electrónica**: el nombre ayuda a ordenar la cola, pero **no reemplaza la consulta del rubro (CIIU)**.
-2. Tú haces las 20 consultas manuales (SP-06) y guardas cada página completa. Con eso cerramos SP-07 y calibramos la lectura de la ficha.
-3. Leer la política de privacidad de SUNAT (SP-09) y medir la huella en disco (SP-11).
-4. Cerrar este informe con la puerta G0, que ya se cumple en lo esencial: se llega a las dos fuentes masivas desde tu Mac.
+El 25/10/2026, a las 07:22, lanzaste `lookup_fetch.py` con la muestra de 20 RUC más la ficha de baja. Terminó sola en 3 min 41 s.
+
+| Dato | Resultado |
+| --- | --- |
+| Consultas | **21 de 21 `OK`** |
+| Verificaciones humanas pedidas (SP-07) | **0** |
+| Bloqueos, errores o reintentos | 0 |
+| Tiempo de cada consulta | 1.4 a 2.8 s (promedio 1.9 s), más la pausa de 6 a 12 s. Unos 10.5 s por consulta en total: **400 al día son ≈ 70 minutos** |
+| Peso | ≈ 30 KB por ficha. Una captura pesa ≈ 190 KB: solo para pruebas, no para lotes grandes |
+| Parser | 21 de 21 fichas leídas. 17 pruebas con fichas inventadas más la lectura de las fichas reales |
+
+Con 21 consultas **no se puede asegurar** que SUNAT no pedirá verificación en lotes de cientos. La puerta G1 (`docs/10` §3) pide una muestra de 300: se cierra con el lote de 400.
+
+### 7.1 La ficha real
+
+- Trae **19 etiquetas**, todas las que el modelo esperaba: `Número de RUC`, `Tipo Contribuyente`, `Nombre Comercial`, `Fecha de Inscripción`, `Fecha de Inicio de Actividades`, `Estado del Contribuyente`, `Fecha de Baja` (solo en bajas), `Condición del Contribuyente`, `Domicilio Fiscal`, `Sistema Emisión de Comprobante`, `Actividad Comercio Exterior`, `Sistema Contabilidad`, `Actividad(es) Económica(s)`, `Comprobantes de Pago…`, `Sistema de Emisión Electrónica`, `Emisor electrónico desde`, `Comprobantes Electrónicos`, `Afiliado al PLE desde` y `Padrones`.
+- **Se confirmó `Emisor electrónico desde`** (20 de 21 fichas lo traen).
+- En las **personas naturales** aparece además `Tipo de Documento`, con el DNI y el nombre pegados. El parser lo reconoce para no mezclarlo con el tipo de contribuyente, pero **guarda solo «DNI»**, nunca el número ni el nombre. El domicilio fiscal viene vacío (`-`).
+- La fecha de baja viene pegada al estado (`BAJA DE OFICIO` + `Fecha de Baja: 31/10/2024` en el mismo bloque). El parser ya lo separa.
+- Una persona natural sin negocio puede **no tener actividad económica principal**. Eso es una ficha válida, no un error. Solo se rechaza si falta la sección entera (cambió la página).
+- Hay códigos CIIU de **5 dígitos** (revisión 3) en 2 de 21 fichas. La columna pasó a `varchar(5)`.
+- Los **tipos de contribuyente** reales incluyen abreviaturas: `SOC.COM.RESPONS. LTDA` (S.R.L.), `EMPRESA INDIVIDUAL DE RESP. LTDA` (E.I.R.L.), `SUCURSALES O AG. DE EMP. EXTRANJ.`, `UNIVERS. CENTROS EDUCAT. Y CULT.`, `PERSONA NATURAL CON NEGOCIO` y `PERSONA NATURAL SIN NEGOCIO`.
+
+### 7.2 Lo que aprendimos de las 21 fichas
+
+**Cuidado:** es una muestra pequeña y sesgada (6 de las 20 se eligieron por tener una palabra clave en el nombre). Sirve para ver tendencias, no para calcular porcentajes definitivos.
+
+| Dato | Resultado |
+| --- | --- |
+| Actividad de comercio exterior | Importador 13 (62 %) · **`SIN ACTIVIDAD` 7 (33 %)** · solo exportador 1 (5 %) |
+| Pasan los tres filtros (`ACTIVO` + `HABIDO` + importador) | 12 de 21 |
+| Con algún CIIU de electrónica (`4651`, `4652`, `4741`, `4742`, `4659`) | 4 de 21 (2 como actividad principal y 2 como secundaria). Las 4 pasan los tres filtros |
+| CIIU principal más frecuente | `4690` (venta al por mayor no especializada) en 3 fichas. No está en el catálogo |
+| Antigüedad | Mínimo 2.0 años · mediana 24.9 · máximo 33.7. **19 de 21 tienen 5 años o más**, así que el tope por antigüedad casi no se usaría |
+| Autorizadas a emitir factura | **21 de 21** |
+| Emisores electrónicos | 20 de 21 |
+| Con algún padrón de SUNAT | 9 de 21. **«Buenos Contribuyentes» en 4** |
+
+**Consecuencia para el embudo:** **un tercio de la lista de importadores ya no figura como importador** en SUNAT (`SIN ACTIVIDAD`). El filtro `SIN_ACTIVIDAD_IMPORTADOR` de `docs/05` es necesario y quitaría una parte importante de los 11,459. El número exacto se sabrá con el lote de 400.
+
+### 7.3 Propuestas para decidir
+
+**P1. Reemplazar el criterio «comprobantes» (10 puntos) por «padrones de SUNAT» (10 puntos).**
+
+- «Comprobantes» casi no distingue (21 de 21 emiten facturas, 20 de 21 son emisores electrónicos): sumaría lo mismo a todas.
+- Los **padrones** sí distinguen y son señales oficiales:
+  - **Buen Contribuyente** vigente: 6 puntos. Es una calificación de SUNAT al buen cumplimiento tributario.
+  - **Agente de Retención de IGV** vigente: 4 puntos. SUNAT designa a este régimen a contribuyentes relevantes, así que sirve como **aproximación de tamaño**, justo lo que la lista de Aduanet no da.
+  - «Vigente» significa que hay una línea «Incorporado» sin una línea «Excluido» posterior del mismo régimen (`Excluido del Régimen de Agentes de Retención de IGV a partir del 01/02/2026` anula la incorporación anterior).
+- Quedaría: rubro 45 · antigüedad 25 · forma societaria 10 · padrones 10 · logística 10.
+- Se decide con más datos: el lote de 400 dirá cuántas empresas tienen cada padrón.
+
+**P2.** Revisar el peso del CIIU `4690` y de otros códigos generalistas cuando haya cientos de fichas.
+
+**P3.** Tratar los CIIU de 5 dígitos como «sin clasificar» (peso 0) hasta tener una tabla de equivalencia.
+
+## 8. Siguientes pasos
+
+1. **Lote de 400** (tú, ≈ 70 min). Mientras tanto, yo escribo el **motor de puntaje** (función pura, `docs/05` §6) y lo aplico a las 21 fichas para ver cómo quedarían los niveles.
+2. Decidir la propuesta **P1** con los datos del lote.
+3. Pendientes del spike: SP-08 (tabla CIIU oficial), SP-09 (política de privacidad de SUNAT) y la parte de Docker de SP-11.
+4. Cerrar la puerta G1 con la muestra de 400: tasa de `PARSE_ERROR` (meta < 2 %) y de verificaciones (meta < 5 %). Con 21 fichas ya hay 0 % y 0 %.

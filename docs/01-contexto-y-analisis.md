@@ -187,7 +187,7 @@ Cada categoría tiene su propio perfil, con los mismos criterios pero distinto p
 | ID | Riesgo | Prob. | Impacto | Mitigación |
 | --- | --- | --- | --- | --- |
 | R-01 | Aduanet o SUNAT rechazan o limitan las conexiones automáticas | **Baja por ahora:** la lista (200 en 2.8 s) y el padrón se descargaron con solicitudes simples. Falta ver cómo responde la consulta RUC individual | Alto | Todo corre en tu Mac, con ritmo cortés. Carga desde archivo guardado como alternativa. No se esquivan controles |
-| R-02 | La consulta RUC pide captcha o limita el volumen | Alta | Alto | Prefiltro en masa con el padrón, cola priorizada, ritmo bajo, pausa automática y **fallback manual**. Opción de proveedor de pago intercambiable |
+| R-02 | La consulta RUC pide captcha o limita el volumen | **Media:** en las primeras 21 consultas no hubo ninguna verificación (`docs/12` §7). Falta ver qué pasa con lotes de cientos | Alto | Prefiltro en masa con el padrón, cola priorizada, ritmo bajo, pausa automática y **fallback manual**. Opción de proveedor de pago intercambiable |
 | R-03 | Cambia el HTML de SUNAT y el parser devuelve datos erróneos | Media | Alto | Parsers con pruebas sobre HTML guardado, validación estricta y alerta. Un parseo que falla **no guarda datos basura** |
 | R-04 | Se interpreta el puntaje como garantía y se compra a un estafador | Media | Muy alto | Mensajes claros en la interfaz, lista de verificación obligatoria antes de «Aprobar», y no usar el nombre «confiable» como sello |
 | R-05 | Datos personales de personas naturales (RUC `10…`) mal tratados | Media | Medio | Uso interno, sin exposición pública, accesos con roles y registro de auditoría (`docs/07`) |
@@ -255,6 +255,7 @@ La **Clave SOL** es el usuario y la contraseña con los que una empresa o person
 | a | **Antigüedad.** Entendí «mínimo 5 años, sin excluir a los más antiguos» como: 5 años o más es lo ideal, y con menos **no se descarta** pero el nivel no pasa de B | Dejarlo así. Si prefieres que la menor antigüedad **sí descarte**, se cambia a un filtro eliminatorio | `docs/05` §6.1 |
 | b | **Respaldos.** Dónde guardar la copia cifrada de la base de datos: disco externo o una carpeta de nube (OneDrive) cifrada | Tú eliges. Con la nube, siempre cifrada | `docs/03`, `docs/07` §9 |
 | c | **Pesos de los perfiles nuevos.** Los de laptops, accesorios y repuestos son una propuesta | Calibrarlos en el spike con los códigos CIIU reales | `docs/01` §6.1 |
+| d | **Criterio «comprobantes» del puntaje.** En las 21 fichas, las 21 están autorizadas a emitir factura y 20 son emisores electrónicos: el criterio da casi lo mismo a todas. En cambio, **4 de 21 son «Buenos Contribuyentes»** y varias son agentes de retención de IGV (señal de tamaño) | Reemplazar «comprobantes» (10 puntos) por «padrones de SUNAT» (10 puntos): Buen Contribuyente vigente 6, agente de retención de IGV vigente 4 (`docs/12` §7.3) | `docs/01` §6, `docs/05` §6.1 |
 
 ## 10. Glosario
 

@@ -14,6 +14,8 @@ Se ejecutan con `python3 -I` (modo aislado) y reciben las rutas como argumentos.
 | `test_lookup_fetch.py` | 16 pruebas de la lógica de `lookup_fetch.py` con un navegador simulado (no toca SUNAT) | — |
 | `test_lookup_browser.py` | 13 pruebas del **navegador real** (tu Chrome) contra una página **local** que imita el formulario y la ficha: iframe, respuesta lenta, sin resultado, verificación, bloqueo, ficha que no aparece. No toca SUNAT | — |
 | `requirements.txt` | Versión fijada de Playwright | — |
+| `parse_ficha.py` | **Parser de las fichas** guardadas: extrae los campos de la consulta RUC y los valida (si falta un campo obligatorio, la ficha se reporta como error y no se acepta). Opcionalmente escribe un CSV sin datos personales | `carpeta_de_fichas` `--csv salida.csv` |
+| `test_parse_ficha.py` | 17 pruebas del parser con fichas inventadas de la misma estructura que las reales. Si existen fichas reales en `data/`, comprueba además que todas se lean | — |
 | `export_h1_csv.py` | Genera el CSV de importadores `ACTIVO` + `HABIDO` con razón social, tipo, estado, condición, departamento y prioridad | `lista.html` `elegibles.tsv` `salida.csv` |
 
 ## Orden de uso

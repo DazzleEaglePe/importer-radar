@@ -69,7 +69,7 @@ Objetivo: reemplazar supuestos por datos. Todo se hace **desde tu equipo**, con 
 
 ### 4.1 Resultados (25/10/2026)
 
-El detalle está en [`12-informe-del-spike.md`](12-informe-del-spike.md): están hechas **SP-01 a SP-05**: la lista tiene 26,003 RUC únicos, 11,459 de ellos `ACTIVO` + `HABIDO`, y se descarga con una solicitud simple. Quedan pendientes SP-06 a SP-09 y la parte de Docker de SP-11. La puerta G0 se cumple en lo esencial.
+El detalle está en [`12-informe-del-spike.md`](12-informe-del-spike.md): están hechas **SP-01 a SP-06**: la lista tiene 26,003 RUC únicos, 11,459 de ellos `ACTIVO` + `HABIDO`, se descarga con una solicitud simple, y las primeras 21 consultas reales de RUC salieron bien (0 verificaciones, 0 errores). SP-07 queda parcial (con 21 consultas no alcanza). Quedan pendientes SP-08, SP-09 y la parte de Docker de SP-11. La puerta G0 se cumple en lo esencial.
 
 ## 5. Backlog por épica
 
