@@ -118,6 +118,7 @@ Un panel web interno con un **pipeline automático** y una **vista de revisión*
 | D-19 | La lista de Aduanet se **descarga con una solicitud simple** (`GET`, sin sesión) y también se puede **cargar desde un archivo guardado**, como alternativa | Spike 25/10 (`docs/12` §2) |
 | D-20 | Se **quita del puntaje** el criterio «actualización en Aduanet»: 99.1 % de las fechas son de 2001 a 2009. Sus 10 puntos pasan 5 al rubro y 5 a la antigüedad | Spike 25/10 (`docs/12` §2.4) |
 | D-21 | La consulta RUC individual se **automatiza con un programa propio** (Playwright sobre tu Chrome instalado, ventana visible) que **tú ejecutas**. Claude lo escribe y lo prueba con un navegador simulado, pero **no lo ejecuta** contra esa página. Ritmo cortés, topes, parada ante bloqueos y verificaciones resueltas por ti | Tu petición 25/10 (`docs/12` §6) |
+| D-22 | **Tope por rubro (P4):** una empresa sin ningún punto de rubro tiene como máximo nivel C, aunque su puntaje sea alto. El puntaje no cambia, solo el nivel | Tu decisión 25/10 (`docs/12` §7.3 y §7.4) |
 
 ## 6. Cómo se decide qué es «confiable» (propuesto)
 
@@ -145,6 +146,8 @@ Se separa en **filtros eliminatorios** (si fallan, la empresa se descarta del to
 **Niveles:** A ≥ 75 · B 55–74 · C 35–54 · D < 35.
 
 **Tope por antigüedad (D-13):** una empresa con menos de 5 años de inscrita **no se descarta**, pero su nivel no puede pasar de B, aunque su puntaje sea alto. No hay tope máximo: una empresa de 30 años cuenta igual que una de 5, siempre que sea `ACTIVO` y `HABIDO`.
+
+**Tope por rubro (D-22):** una empresa **sin ningún punto de rubro** (ninguna de sus actividades, principal o secundaria, es relevante para el perfil) tiene como máximo nivel C, aunque su puntaje sea alto. Sin este tope, los criterios generales (antigüedad, forma societaria, comprobantes y logística) suman 55 puntos a cualquier S.A.C. antigua de Lima que emita facturas, y 55 es justo el umbral del nivel B: una empresa de otro rubro llegaba a B sin tener nada que ver con celulares. El puntaje no cambia; solo el nivel.
 
 > **`ACTIVO` y `HABIDO` no son lo mismo.** `ACTIVO` es el *estado* del contribuyente (no está de baja ni suspendido). `HABIDO` es la *condición* del domicilio (SUNAT pudo ubicarlo). Una empresa puede ser HABIDA y estar dada de baja, como la de tu captura. Por eso se exigen **las dos**.
 
@@ -255,7 +258,7 @@ La **Clave SOL** es el usuario y la contraseña con los que una empresa o person
 | a | **Antigüedad.** Entendí «mínimo 5 años, sin excluir a los más antiguos» como: 5 años o más es lo ideal, y con menos **no se descarta** pero el nivel no pasa de B | Dejarlo así. Si prefieres que la menor antigüedad **sí descarte**, se cambia a un filtro eliminatorio | `docs/05` §6.1 |
 | b | **Respaldos.** Dónde guardar la copia cifrada de la base de datos: disco externo o una carpeta de nube (OneDrive) cifrada | Tú eliges. Con la nube, siempre cifrada | `docs/03`, `docs/07` §9 |
 | c | **Pesos de los perfiles nuevos.** Los de laptops, accesorios y repuestos son una propuesta | Calibrarlos en el spike con los códigos CIIU reales | `docs/01` §6.1 |
-| e | **Tope por rubro y peso de las secundarias** (P4 y P5). 5 de las 6 empresas de nivel B no tienen ningún punto de rubro: los otros criterios suman 55, justo el umbral de B | Sin rubro relevante, nivel máximo C. Peso de las secundarias de 0.8 a 0.5 (`docs/12` §7.3 y §7.4) | `docs/01` §6, `docs/05` §6.1 |
+| e | **Peso de las actividades secundarias** (P5). Una empresa de textiles llegó a nivel A solo porque lista un código de electrónica entre sus secundarias | Bajar el peso de 0.8 a 0.5, o exigir una actividad principal de electrónica para el nivel A (`docs/12` §7.3). El tope por rubro (P4) ya se adoptó: D-22 | `docs/05` §6.1 |
 | d | **Criterio «comprobantes» del puntaje.** En las 21 fichas, las 21 están autorizadas a emitir factura y 20 son emisores electrónicos: el criterio da casi lo mismo a todas. En cambio, **4 de 21 son «Buenos Contribuyentes»** y varias son agentes de retención de IGV (señal de tamaño) | Reemplazar «comprobantes» (10 puntos) por «padrones de SUNAT» (10 puntos): Buen Contribuyente vigente 6, agente de retención de IGV vigente 4 (`docs/12` §7.3) | `docs/01` §6, `docs/05` §6.1 |
 
 ## 10. Glosario

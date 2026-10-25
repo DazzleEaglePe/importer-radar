@@ -129,6 +129,71 @@ class ScoreTests(unittest.TestCase):
         self.assertEqual((f, p), (f0, p0))
 
 
+class RubroCapTests(unittest.TestCase):
+    """P4 / D-22: sin ningún punto de rubro, el nivel máximo es C (AC-13 de docs/02)."""
+    NO_RUBRO = [{'kind': 'PRINCIPAL', 'position': 0, 'ciiu_code': '4690', 'description': ''}]
+
+    def test_ac13_company_without_rubro_is_capped_at_c_but_keeps_its_score(self):
+        r = sc.score(facts(actividades=self.NO_RUBRO), sc.PROFILE_V1)
+        self.assertEqual(by_key(r)['rubro'], 0)
+        self.assertEqual(r['score'], 55)  # 25 + 10 + 10 + 10: justo el umbral de B
+        self.assertEqual(r['tier'], 'C')
+        self.assertEqual(r['tier_cap'], {'rule': 'rubro_points_lt_1', 'from': 'B', 'to': 'C'})
+
+    def test_without_the_cap_the_same_company_would_be_b(self):  # lo que corrige P4
+        p = copy.deepcopy(sc.PROFILE_V1)
+        p['tier_caps'] = [c for c in p['tier_caps'] if 'rubro_points_lt' not in c['when']]
+        self.assertEqual(sc.score(facts(actividades=self.NO_RUBRO), p)['tier'], 'B')
+
+    def test_any_rubro_point_avoids_the_cap(self):
+        acts = [{'kind': 'PRINCIPAL', 'position': 0, 'ciiu_code': '4659', 'description': ''}]  # peso 0.2 → 9 puntos
+        r = sc.score(facts(actividades=acts), sc.PROFILE_V1)
+        self.assertEqual(by_key(r)['rubro'], 9)
+        self.assertEqual((r['score'], r['tier']), (64, 'B'))
+        self.assertIsNone(r['tier_cap'])
+
+    def test_company_without_activities_is_also_capped(self):
+        r = sc.score(facts(actividades=[]), sc.PROFILE_V1)
+        self.assertEqual((r['score'], r['tier']), (55, 'C'))
+
+    def test_both_caps_are_listed_even_when_the_tier_was_already_low(self):
+        r = sc.score(facts(actividades=self.NO_RUBRO, antiguedad_anios=3.0), sc.PROFILE_V1)
+        self.assertEqual(r['score'], 48)
+        self.assertEqual(r['tier'], 'C')
+        self.assertEqual(r['caps_triggered'], ['antiguedad_years_lt_5', 'rubro_points_lt_1'])
+        self.assertIsNone(r['tier_cap'])  # ya era C: ningún tope bajó el nivel
+
+    def test_chained_caps_report_the_rule_that_set_the_final_tier(self):
+        p = copy.deepcopy(sc.PROFILE_V1)
+        p['tiers'] = {'A': 40, 'B': 30, 'C': 10}  # 48 puntos serían A sin topes
+        r = sc.score(facts(actividades=self.NO_RUBRO, antiguedad_anios=3.0), p)
+        self.assertEqual(r['tier'], 'C')
+        self.assertEqual(r['tier_cap'], {'rule': 'rubro_points_lt_1', 'from': 'A', 'to': 'C'})
+        self.assertEqual(r['caps_triggered'], ['antiguedad_years_lt_5', 'rubro_points_lt_1'])
+
+    def test_ac12_young_company_with_rubro_does_not_trigger_the_rubro_cap(self):
+        r = sc.score(facts(antiguedad_anios=3.0), sc.PROFILE_V1)
+        self.assertEqual(r['caps_triggered'], ['antiguedad_years_lt_5'])
+
+    def test_a_profile_without_a_rubro_criterion_ignores_the_rubro_cap(self):
+        q = copy.deepcopy(sc.PROFILE_V1)
+        del q['criteria']['rubro']
+        r = sc.score(facts(actividades=self.NO_RUBRO), q)
+        self.assertEqual((r['score'], r['tier'], r['caps_triggered']), (55, 'B', []))
+
+    def test_profile_v2_has_the_same_cap(self):
+        r = sc.score(facts(actividades=self.NO_RUBRO, padrones=[PadronesTests.BC, PadronesTests.AR_IN]), sc.PROFILE_V2_PADRONES)
+        self.assertEqual((r['score'], r['tier']), (55, 'C'))  # 25 + 10 + 10 (padrones) + 10 de logística
+
+    def test_profile_validation_checks_the_caps(self):
+        bad = copy.deepcopy(sc.PROFILE_V1)
+        bad['tier_caps'].append({'when': {'color': 1}, 'max_tier': 'C'})
+        self.assertTrue(any('condición desconocida' in p for p in sc.validate_profile(bad)))
+        bad = copy.deepcopy(sc.PROFILE_V1)
+        bad['tier_caps'][1]['max_tier'] = 'Z'
+        self.assertTrue(any('nivel máximo inválido' in p for p in sc.validate_profile(bad)))
+
+
 class PadronesTests(unittest.TestCase):
     BC = 'Incorporado al Régimen de Buenos Contribuyentes (Resolución N° 0210050002204) a partir del 01/02/2015'
     AR_IN = 'Incorporado al Régimen de Agentes de Retención de IGV (R.S.378-2013) a partir del 01/03/2014'

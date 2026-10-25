@@ -381,7 +381,10 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
     "logistica": { "max": 10, "ubigeo_prefixes": ["15", "07"] }
   },
   "tiers": { "A": 75, "B": 55, "C": 35 },
-  "tier_caps": [ { "when": { "antiguedad_years_lt": 5 }, "max_tier": "B" } ],
+  "tier_caps": [
+    { "when": { "antiguedad_years_lt": 5 }, "max_tier": "B" },
+    { "when": { "rubro_points_lt": 1 },     "max_tier": "C" }
+  ],
   "ciiu_weights": { "4652": 1.0, "4651": 1.0, "4741": 0.6, "4742": 0.3, "4659": 0.2 }
 }
 ```
@@ -389,7 +392,7 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
 - **Peso efectivo** de un código = `ciiu_weights[código]` del perfil si existe; si no, `weight` del catálogo.
 - **`rubro`:** `puntos = round(max × mejor_peso × factor)`, con `factor = 1` si el mejor código es la actividad principal y `secondary_factor` si es secundaria.
 - **`forma_societaria`:** se deduce del texto de `tipo_contribuyente` con una tabla de correspondencias (por ejemplo «SOCIEDAD ANONIMA CERRADA» → `SAC`, «EMPRESA INDIVIDUAL DE RESP. LTDA» → `EIRL`). Los textos exactos se confirman con fichas reales en el spike.
-- **`tier_caps`:** reglas que limitan el nivel sin tocar el puntaje (D-13). La del ejemplo dice que con menos de 5 años de antigüedad el nivel máximo es B. Un perfil puede tener varias o ninguna.
+- **`tier_caps`:** reglas que limitan el nivel sin tocar el puntaje. Las del ejemplo dicen que con menos de 5 años de antigüedad el nivel máximo es B (D-13) y que sin ningún punto de rubro el nivel máximo es C (D-22). Cada regla tiene **una sola condición** (`antiguedad_years_lt` o `rubro_points_lt`) y un `max_tier`. Se aplican en el orden del perfil. Un perfil puede tener varias o ninguna. Si el perfil no tiene el criterio `rubro`, la regla de rubro no se aplica.
 - **Cambiar cualquier valor crea una versión nueva** del perfil. Las versiones anteriores y sus puntajes se conservan.
 
 ### 6.2 Contenido de `breakdown`
@@ -406,11 +409,12 @@ CREATE INDEX ix_scores_rank ON importer_scores (profile_id, score DESC);
   ],
   "total": 100,
   "tier_cap": null,
+  "caps_triggered": [],
   "profile_version": 1
 }
 ```
 
-Cuando se aplica un tope, `tier_cap` trae `{ "rule": "antiguedad_years_lt_5", "from": "A", "to": "B" }` y el puntaje no cambia.
+Cuando un tope baja el nivel, `tier_cap` trae la regla que fijó el nivel final, por ejemplo `{ "rule": "antiguedad_years_lt_5", "from": "A", "to": "B" }` o `{ "rule": "rubro_points_lt_1", "from": "B", "to": "C" }`, y el puntaje no cambia. `caps_triggered` lista **todas** las reglas que se cumplieron, aunque no hayan bajado el nivel (por ejemplo, porque ya era más bajo).
 
 ## 7. Proveedores
 

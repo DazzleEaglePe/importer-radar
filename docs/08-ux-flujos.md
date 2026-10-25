@@ -319,6 +319,8 @@ Para accesorios, cargadores, repuestos y baterías se usa la plantilla `generic-
 | Cola pausada por verificación | «SUNAT pidió una verificación humana. Pausamos las consultas para no insistir. Puedes resolverla tú o cargar la ficha a mano.» |
 | Datos desactualizados | «Los datos de estado tienen más de 14 días. Actualiza el padrón para estar seguro.» |
 | Descartado | «Descartado: estado BAJA DE OFICIO (desde 31/10/2024).» |
+| Nivel limitado por rubro | «Nivel limitado a C: SUNAT no registra para esta empresa ninguna actividad del rubro de este perfil. Su puntaje es 55.» |
+| Nivel limitado por antigüedad | «Nivel limitado a B: tiene menos de 5 años de inscrita.» |
 | Intento de aprobar sin completar | «Faltan 3 puntos obligatorios: garantía, pago seguro y procedencia.» |
 | Fuente de un dato | «Fuente: SUNAT web · consultado el 22/10/2026» |
 | Confirmación de exclusión | «¿Excluir a EMPRESA S.A.C.? No volverá a aparecer en los listados. Puedes restaurarla desde su ficha.» |

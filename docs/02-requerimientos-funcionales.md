@@ -75,6 +75,7 @@ Cargar lista Aduanet → Cruzar con padrón → Cola de consultas RUC → Puntaj
 | RF-PUN-04 | **Recalcular** al cambiar un perfil o el catálogo CIIU **sin volver a consultar SUNAT** | M | H2 |
 | RF-PUN-05 | Mostrar por qué una empresa es A y otra B (comparación de desgloses) | C | Posterior |
 | RF-PUN-06 | **Tope de nivel por antigüedad**: una empresa con menos de 5 años de inscrita no se descarta, pero no puede pasar de nivel B. El umbral y el nivel máximo son configurables en el perfil, y el desglose muestra cuándo se aplicó el tope | M | H2 |
+| RF-PUN-07 | **Tope de nivel por rubro**: una empresa sin ningún punto de rubro no puede pasar de nivel C, para que los criterios generales (hasta 55 puntos) no den nivel B a empresas de otro rubro. Umbral y nivel máximo configurables. El puntaje no cambia y el desglose muestra qué reglas se cumplieron y cuál fijó el nivel (D-22) | M | H2 |
 
 ### 3.5 Explorar importadores (IMP)
 
@@ -193,3 +194,8 @@ Los casos usan datos reales de tus capturas como material de prueba (solo RUC, e
 **AC-12 · Tope por antigüedad (RF-PUN-06)**
 - *Dado* un importador `ACTIVO` y `HABIDO` con 3 años de inscrito, actividad principal `4652`, S.A.C., facturación electrónica, y domicilio en Lima (puntaje **93**: 45 + 18 + 10 + 10 + 10),
 - *Entonces* su nivel es **B** y no A. El puntaje sigue siendo 93 y el desglose muestra `tier_cap` con la regla aplicada.
+
+**AC-13 · Tope por rubro (RF-PUN-07)**
+- *Dado* un importador `ACTIVO` y `HABIDO` con 31 años de inscrito, S.A.C., autorizado a facturar y con emisión electrónica, domicilio en Lima y actividad principal `4690` (sin ningún código relevante para el perfil), con puntaje **55** (0 + 25 + 10 + 10 + 10),
+- *Entonces* su nivel es **C** y no B. El puntaje sigue siendo 55 y el desglose muestra `tier_cap` con la regla `rubro_points_lt_1`, de B a C.
+- *Y si* tuviera aunque sea un punto de rubro (por ejemplo, una actividad `4659` con peso 0.2, que da 9 puntos), no se aplica el tope.

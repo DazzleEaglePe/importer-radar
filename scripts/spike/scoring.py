@@ -29,7 +29,10 @@ PROFILE_V1 = {
         'logistica': {'max': 10, 'ubigeo_prefixes': ['15', '07']},
     },
     'tiers': {'A': 75, 'B': 55, 'C': 35},
-    'tier_caps': [{'when': {'antiguedad_years_lt': 5}, 'max_tier': 'B'}],
+    'tier_caps': [
+        {'when': {'antiguedad_years_lt': 5}, 'max_tier': 'B'},  # D-13: con menos de 5 años no se descarta, pero no pasa de B
+        {'when': {'rubro_points_lt': 1}, 'max_tier': 'C'},      # D-22 (P4): sin ningún punto de rubro no pasa de C
+    ],
     'ciiu_weights': CIIU_WEIGHTS_SMARTPHONES,
 }
 
@@ -57,6 +60,11 @@ def validate_profile(profile: dict) -> List[str]:
     for code, w in profile.get('ciiu_weights', {}).items():
         if not (0 <= w <= 1):
             problems.append(f'peso fuera de 0 a 1 en CIIU {code}')
+    for cap in profile.get('tier_caps', []):
+        if len(cap.get('when', {})) != 1 or not set(cap['when']) <= {'antiguedad_years_lt', 'rubro_points_lt'}:
+            problems.append(f"tope con condición desconocida: {cap.get('when')}")
+        if cap.get('max_tier') not in TIER_ORDER:
+            problems.append(f"tope con nivel máximo inválido: {cap.get('max_tier')}")
     return problems
 
 
@@ -153,14 +161,25 @@ def score(facts: dict, profile: dict) -> dict:
     total = sum(i['points'] for i in items)
     t = profile['tiers']
     tier = 'A' if total >= t['A'] else 'B' if total >= t['B'] else 'C' if total >= t['C'] else 'D'
-    cap_applied = None
+    # Topes de nivel: limitan el nivel sin tocar el puntaje. Se aplican en el orden del perfil; `tier_cap` dice qué regla fijó
+    # el nivel final y `caps_triggered` lista todas las que se cumplieron (aunque no bajaran el nivel).
+    rubro_pts = next((i['points'] for i in items if i['key'] == 'rubro'), None)
+    tier_before, cap_applied, triggered = tier, None, []
     for cap in profile.get('tier_caps', []):
-        lim = cap['when'].get('antiguedad_years_lt')
-        if lim is not None and (years is None or years < lim) and TIER_ORDER.index(tier) < TIER_ORDER.index(cap['max_tier']):
-            cap_applied = {'rule': f'antiguedad_years_lt_{lim}', 'from': tier, 'to': cap['max_tier']}
+        w = cap['when']
+        rule = None
+        if 'antiguedad_years_lt' in w and (years is None or years < w['antiguedad_years_lt']):
+            rule = f"antiguedad_years_lt_{w['antiguedad_years_lt']}"
+        elif 'rubro_points_lt' in w and rubro_pts is not None and rubro_pts < w['rubro_points_lt']:
+            rule = f"rubro_points_lt_{w['rubro_points_lt']}"
+        if rule is None:
+            continue
+        triggered.append(rule)
+        if TIER_ORDER.index(tier) < TIER_ORDER.index(cap['max_tier']):
             tier = cap['max_tier']
+            cap_applied = {'rule': rule, 'from': tier_before, 'to': tier}
     return {'gate': None, 'score': total, 'tier': tier, 'items': items, 'tier_cap': cap_applied,
-            'profile_version': profile['version']}
+            'caps_triggered': triggered, 'profile_version': profile['version']}
 
 
 def facts_from_ficha(f: dict, antiguedad_anios: Optional[float], ubigeo: Optional[str] = None, excluido: bool = False) -> dict:

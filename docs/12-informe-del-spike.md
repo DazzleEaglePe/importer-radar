@@ -381,7 +381,7 @@ Con 21 consultas **no se puede asegurar** que SUNAT no pedirá verificación en 
 - Quedaría: rubro 45 · antigüedad 25 · forma societaria 10 · padrones 10 · logística 10.
 - Se decide con más datos: el lote de 400 dirá cuántas empresas tienen cada padrón.
 
-**P4. Tope por rubro.** Una empresa **sin ningún punto de rubro** no puede pasar del nivel C. Hoy, los otros cuatro criterios (antigüedad, forma societaria, comprobantes y logística) suman **55 puntos** a cualquier S.A.C. antigua de Lima que emita facturas, y 55 es justo el umbral del nivel B: una empresa de otro rubro llega a B sin tener nada que ver con celulares (§7.4). Se implementa como un `tier_cap` más (`rubro_points_lt: 1`). **Es la propuesta que más recomiendo.**
+**P4. Tope por rubro: ADOPTADA el 25/10 (D-22).** Una empresa **sin ningún punto de rubro** no puede pasar del nivel C. Antes, los otros cuatro criterios (antigüedad, forma societaria, comprobantes y logística) sumaban **55 puntos** a cualquier S.A.C. antigua de Lima que emitiera facturas, y 55 es justo el umbral del nivel B (§7.4). Está en el motor como un `tier_cap` más (`rubro_points_lt: 1`), con 10 pruebas y el caso AC-13.
 
 **P5. Peso de las actividades secundarias.** Bajar `secondary_factor` de 0.8 a 0.5, o exigir una actividad principal de electrónica para el nivel A. Una empresa cuya actividad principal son los textiles llegó a nivel A solo porque lista un código de electrónica entre sus secundarias. Decidir con el lote de 400.
 
@@ -391,27 +391,30 @@ Con 21 consultas **no se puede asegurar** que SUNAT no pedirá verificación en 
 
 ### 7.4 Primer puntaje de las 21 fichas (`scoring.py`)
 
-El motor es una función pura con 22 pruebas (incluidos los casos AC-08 y AC-12 de `docs/02`). Resultado, sin nombres de empresas:
+El motor es una función pura con 32 pruebas (incluidos los casos AC-08, AC-12 y AC-13 de `docs/02`). Resultado con las **21 fichas originales**, sin nombres de empresas:
 
-| | Perfil actual (v1, con «comprobantes») | P1 (v2, con «padrones») |
-| --- | ---: | ---: |
-| Descartadas por filtro | 9 (8 por comercio exterior, 1 por estado) | 9 |
-| Nivel A | 3 | 3 |
-| Nivel B | 6 | 1 |
-| Nivel C | 3 | 7 |
-| Nivel D | 0 | 1 |
+| | v1 sin tope por rubro | **v1 con P4 (vigente)** | P1 (v2) con P4 |
+| --- | ---: | ---: | ---: |
+| Descartadas por filtro | 9 | 9 | 9 |
+| Nivel A | 3 | 3 | 3 |
+| Nivel B | 6 | **1** | 0 |
+| Nivel C | 3 | **8** | 8 |
+| Nivel D | 0 | 0 | 1 |
+| Bajadas de nivel por el tope de rubro | — | 5 | 1 |
 
 Lo que se ve:
 
 1. **Los filtros descartan 9 de 21 (43 %).** Ocho ya no son importadoras en SUNAT (siete «sin actividad» y una solo exportadora) y una está de baja. Entre ellas están las dos personas naturales.
-2. **Las 3 de nivel A son empresas de verdad del rubro**: dos con CIIU principal `4652` y 25 a 31 años de antigüedad, y la de textiles que menciono en P5.
-3. **5 de las 6 empresas de nivel B tienen 0 puntos de rubro.** Su actividad principal es de otro rubro (autopartes, alimentos, petróleo y gas, venta mayorista no especializada y textiles) y llegan a B solo por los 55 puntos de relleno. La sexta tiene 7 puntos de rubro. Esto es lo que corrige P4.
-4. **P1 quita 10 puntos a quien no tiene padrones** (todos tenían los 10 de «comprobantes»). Sin recalibrar los umbrales, 5 de las 6 de nivel B pasan a C. Si se adopta P1, hay que revisar los umbrales A/B/C con los datos del lote de 400.
+2. **Las 3 de nivel A son empresas del rubro**: dos con CIIU principal `4652` y 25 a 31 años de antigüedad, y la de textiles que menciono en P5.
+3. **Antes de P4, 5 de las 6 empresas de nivel B tenían 0 puntos de rubro.** Su actividad principal es de otro rubro (autopartes, alimentos, petróleo y gas, venta mayorista no especializada y textiles) y llegaban a B solo por los 55 puntos de relleno. **Con P4 esas 5 pasan a C.** La única B que queda tiene 7 puntos de rubro.
+4. **P1 quita 10 puntos a quien no tiene padrones** (todas tenían los 10 de «comprobantes»). Con P4 ya adoptado, el efecto de P1 es menor en estas 21 (una empresa más baja de B a C), pero habría que revisar los umbrales con más datos.
 5. La razón social de **SUNAT** puede diferir de la de la lista de Aduanet (en un caso, `S.A.` frente a `S.A.C.`): conviene tomar la de la ficha cuando exista.
+
+**Un lote en curso:** mientras se escribía esto ya se estaba ejecutando el lote de 400 (30 fichas con 0 verificaciones y 0 errores a las 07:39). Las cifras de arriba son de las 21 originales y se repetirán con el lote completo.
 
 ## 8. Siguientes pasos
 
 1. **Lote de 400** (tú, ≈ 70 min). Con esas fichas se repite este análisis con una muestra real.
-2. Decidir las propuestas **P1, P4 y P5**. Con el lote de 400 se ve cuántas empresas tienen cada padrón y cuántas quedan sin rubro.
+2. Decidir las propuestas **P1 y P5** (P4 ya está adoptada, D-22). Con el lote de 400 se ve cuántas empresas tienen cada padrón y cuántas quedan sin rubro.
 3. Pendientes del spike: SP-08 (tabla CIIU oficial), SP-09 (política de privacidad de SUNAT) y la parte de Docker de SP-11.
 4. Cerrar la puerta G1 con la muestra de 400: tasa de `PARSE_ERROR` (meta < 2 %) y de verificaciones (meta < 5 %). Con 21 fichas ya hay 0 % y 0 %.

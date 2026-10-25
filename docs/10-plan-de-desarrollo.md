@@ -131,7 +131,7 @@ El detalle está en [`12-informe-del-spike.md`](12-informe-del-spike.md): están
 | E5-03 | Perfiles versionados y semillas de los cuatro perfiles (iPhone, laptops, accesorios, repuestos) | RF-PUN-02 | 1–1.5 |
 | E5-04 | Recalculación por lotes sin reconsultar | RF-PUN-04, RNF-REN-05 | 1 |
 | E5-05 | Comando `radar score` y exportación con puntaje | RF-OPS-03 | 0.5 |
-| E5-06 | Tope de nivel por antigüedad (`tier_caps`) en el motor y en el desglose | RF-PUN-06 | 0.5 |
+| E5-06 | Topes de nivel por antigüedad y por rubro (`tier_caps`) en el motor y en el desglose | RF-PUN-06, RF-PUN-07 | 0.5–1 |
 
 **Hito H2:** lista nivel A y B para iPhone en CSV.
 

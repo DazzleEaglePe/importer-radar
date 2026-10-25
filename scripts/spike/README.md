@@ -17,7 +17,7 @@ Se ejecutan con `python3 -I` (modo aislado) y reciben las rutas como argumentos.
 | `parse_ficha.py` | **Parser de las fichas** guardadas: extrae los campos de la consulta RUC y los valida (si falta un campo obligatorio, la ficha se reporta como error y no se acepta). Opcionalmente escribe un CSV sin datos personales | `carpeta_de_fichas` `--csv salida.csv` |
 | `test_parse_ficha.py` | 17 pruebas del parser con fichas inventadas de la misma estructura que las reales. Si existen fichas reales en `data/`, comprueba además que todas se lean | — |
 | `scoring.py` | **Motor de puntaje** (función pura, `docs/05` §6): filtros eliminatorios, criterios, niveles y topes. Trae el perfil actual (v1) y la propuesta P1 (v2) | — |
-| `test_scoring.py` | 22 pruebas del motor, incluidos los casos AC-08 y AC-12 de `docs/02` | — |
+| `test_scoring.py` | 32 pruebas del motor, incluidos los casos AC-08, AC-12 y AC-13 de `docs/02` | — |
 | `score_fichas.py` | Aplica el motor a las fichas guardadas y compara v1 con v2. No muestra nombres ni RUC completos de personas naturales | `carpeta_de_fichas` `elegibles.tsv` `--csv salida.csv` |
 | `export_h1_csv.py` | Genera el CSV de importadores `ACTIVO` + `HABIDO` con razón social, tipo, estado, condición, departamento y prioridad | `lista.html` `elegibles.tsv` `salida.csv` |
 
