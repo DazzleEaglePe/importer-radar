@@ -15,7 +15,7 @@
 | SP-03 | Formato del padrón reducido | **Hecha** | §3 |
 | SP-04 | Valores de estado y condición | **Hecha** | §3.4 |
 | SP-05 | Cruce lista × padrón (tamaño real del embudo) | **Hecha** | **11,459 ACTIVO + HABIDO**, el 44.1 % (§4) |
-| SP-06 | 20 consultas de RUC | **Programa listo, falta tu corrida** | `scripts/spike/lookup_fetch.py`, con 16 pruebas de su lógica (§6.1) |
+| SP-06 | 20 consultas de RUC | **Programa listo, falta tu corrida** | `scripts/spike/lookup_fetch.py`, con 29 pruebas: 16 de lógica y 13 del navegador contra una página local (§6.1) |
 | SP-07 | Frecuencia de verificación humana | **Pendiente** | Sale de SP-06 |
 | SP-08 | Tabla CIIU oficial del INEI | **Pendiente** | — |
 | SP-09 | Términos de las fuentes | **Parcial** | `robots.txt` revisados (`docs/01` §9.1). Falta leer la política de privacidad de SUNAT |
@@ -277,14 +277,12 @@ Por eso la **priorización** importa: con las primeras 400 a 800 consultas, bien
 
 Abre **tu Chrome** (visible), consulta **un RUC a la vez** y guarda cada ficha. **Lo ejecutas tú.** Claude lo escribe y lo prueba con un navegador simulado, pero no lo ejecuta contra esa página (`docs/01` §9.1, D-21).
 
-**Preparación, una sola vez** (en la terminal, dentro de `bot-scraping/`):
+**Preparación: ya está hecha.** El 25/10 se creó `.venv/` dentro de `bot-scraping/` con Playwright 1.60.0 (unos 142 MB en disco, fuera de git). Usa el Chrome que ya tienes instalado y no baja otro navegador. Para recrearla en otra máquina:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install playwright
+.venv/bin/pip install -r scripts/spike/requirements.txt
 ```
-
-Son unos 45 MB. Usa el Chrome que ya tienes instalado y no baja otro navegador. `.venv/` está fuera de git.
 
 **Primera corrida** (la muestra de 20 más la ficha de baja de oficio de tu primera captura):
 
@@ -303,6 +301,8 @@ Son unos 45 MB. Usa el Chrome que ya tienes instalado y no baja otro navegador. 
 - Si hay un **bloqueo** (403, 429 o un aviso de demasiadas consultas), se detiene en el acto y no insiste.
 - Tras 3 errores seguidos, se detiene.
 - Guarda en `data/raw/consulta_ruc/2026-10-25/`: `<ruc>.html` (y `<ruc>.png` con `--screenshot`) más un registro `lookups.jsonl` con el resultado de cada intento.
+
+**Qué se probó y qué no.** La lógica (ritmo, topes, reanudar, paradas) tiene 16 pruebas, y el navegador real tiene 13 pruebas contra una página **local** que imita el formulario y la ficha: ficha normal, formulario dentro de un iframe, respuesta lenta, RUC sin resultado, verificación (y la persona que la resuelve), bloqueo por texto y por HTTP 429, ficha que nunca aparece y formulario roto. Todas pasan, y ninguna tocó SUNAT. Eso **no garantiza** que SUNAT se comporte igual.
 
 **Es normal que la primera corrida falle en algún paso.** El programa se escribió a partir de tus capturas, sin ver la página por dentro (no puedo abrirla). Si no encuentra el campo o la ficha, guarda lo que vio como `<ruc>.error.html` y se detiene a los 3 errores. Me lo cuentas y lo ajusto con esos archivos.
 

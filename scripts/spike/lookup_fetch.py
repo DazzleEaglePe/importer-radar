@@ -197,8 +197,10 @@ def ask_human_tty(idx: int) -> bool:
 class PlaywrightDriver:
     """Controla tu Chrome (instalado en el Mac) con una ventana y un perfil temporal. Sin cambiar la identidad del navegador."""
 
-    def __init__(self, headless: bool = False, channel: str = 'chrome', timeout_s: int = 30, shots: bool = False):
+    def __init__(self, headless: bool = False, channel: str = 'chrome', timeout_s: int = 30, shots: bool = False,
+                 form_url: Optional[str] = None):
         self.headless, self.channel, self.timeout_s, self.shots = headless, channel, timeout_s, shots
+        self.form_url = form_url  # solo para pruebas locales; si es None se usa FORM_URL
 
     def __enter__(self):
         from playwright.sync_api import sync_playwright
@@ -240,7 +242,7 @@ class PlaywrightDriver:
     def fetch(self, ruc: str) -> Result:
         page = self.page
         try:
-            resp = page.goto(FORM_URL, wait_until='domcontentloaded')
+            resp = page.goto(self.form_url or FORM_URL, wait_until='domcontentloaded')
         except Exception as e:
             return Result(ERROR, note=f'no pude abrir el formulario: {str(e)[:120]}')
         if resp is not None and resp.status in (403, 429):
@@ -287,7 +289,11 @@ def main(argv=None) -> int:
     ap.add_argument('--headless', action='store_true', help='sin ventana (si hay verificación, se detiene)')
     ap.add_argument('--screenshot', action='store_true', help='guarda también una captura de cada ficha')
     ap.add_argument('--dry-run', action='store_true', help='solo muestra el plan, sin abrir el navegador')
+    ap.add_argument('--form-url', default=None, help='solo para pruebas: una página LOCAL que imita el formulario')
     args = ap.parse_args(argv)
+    if args.form_url and not re.match(r'^http://(127\.0\.0\.1|localhost)(:\d+)?/', args.form_url):
+        print('--form-url solo acepta direcciones locales (http://127.0.0.1 o http://localhost).')
+        return 2
 
     lo, hi = (float(x) for x in args.delay.split(','))
     if lo < 3 or hi < lo:
@@ -313,7 +319,7 @@ def main(argv=None) -> int:
         return 0
     print('Abriendo Chrome. Puedes ver todo lo que hace. Ctrl+C para parar cuando quieras.\n')
     try:
-        with PlaywrightDriver(headless=args.headless, shots=args.screenshot) as drv:
+        with PlaywrightDriver(headless=args.headless, shots=args.screenshot, form_url=args.form_url) as drv:
             summary = run(rucs, drv.fetch, out_dir, max_n=args.max, daily_cap=args.daily_cap, delay=(lo, hi),
                           ask_human=None if args.headless else ask_human_tty)
     except KeyboardInterrupt:
