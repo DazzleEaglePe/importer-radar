@@ -15,7 +15,7 @@
 | SP-03 | Formato del padrón reducido | **Hecha** | §3 |
 | SP-04 | Valores de estado y condición | **Hecha** | §3.4 |
 | SP-05 | Cruce lista × padrón (tamaño real del embudo) | **Hecha** | **11,459 ACTIVO + HABIDO**, el 44.1 % (§4) |
-| SP-06 | 20 consultas manuales de RUC | **Pendiente** | La haces tú (`docs/01` §9.1) |
+| SP-06 | 20 consultas de RUC | **Programa listo, falta tu corrida** | `scripts/spike/lookup_fetch.py`, con 16 pruebas de su lógica (§6.1) |
 | SP-07 | Frecuencia de verificación humana | **Pendiente** | Sale de SP-06 |
 | SP-08 | Tabla CIIU oficial del INEI | **Pendiente** | — |
 | SP-09 | Términos de las fuentes | **Parcial** | `robots.txt` revisados (`docs/01` §9.1). Falta leer la política de privacidad de SUNAT |
@@ -264,32 +264,62 @@ Por eso la **priorización** importa: con las primeras 400 a 800 consultas, bien
 | `docs/06`, `docs/08` | Ejemplos con el nuevo puntaje |
 | `docs/10` | Estado del spike |
 
-## 6. Guía para las consultas manuales de RUC (SP-06)
+## 6. Consultas de RUC del spike (SP-06)
 
-**Para qué sirven estas 20 páginas:**
+**Para qué sirven estas fichas:**
 1. Ver **todos los campos** de la ficha completa, incluida la emisión electrónica que no se alcanzó a ver en la captura.
 2. Armar los *fixtures* con los que se probará el parser (`docs/10` §6).
 3. Medir **cuántas veces pide SUNAT una verificación humana** (SP-07).
 
-**La lista:** `data/processed/aduanet/2026-10-25/sp06_muestra_20_ruc.csv` (fuera de git). Trae 18 empresas y 2 personas naturales, con la columna `para_probar`, el nombre de archivo sugerido y dos columnas vacías para tus anotaciones. Cubre S.A.C. (5), S.A. (4), E.I.R.L. (4), S.R.L. (2), una sucursal de empresa extranjera y otras dos formas; con y sin palabras clave; Lima, Callao y 7 departamentos de provincia. Se regenera con `scripts/spike/pick_sp06_sample.py` (semilla fija).
+**La lista:** `data/processed/aduanet/2026-10-25/sp06_muestra_20_ruc.csv` (fuera de git). Trae 18 empresas y 2 personas naturales, con la columna `para_probar`. Cubre S.A.C. (5), S.A. (4), E.I.R.L. (4), S.R.L. (2), una sucursal de empresa extranjera y otras dos formas; con y sin palabras clave; Lima, Callao y 7 departamentos de provincia. Se regenera con `scripts/spike/pick_sp06_sample.py` (semilla fija).
 
-**Pasos, un RUC a la vez:**
+### 6.1 Automática (recomendada): `scripts/spike/lookup_fetch.py`
+
+Abre **tu Chrome** (visible), consulta **un RUC a la vez** y guarda cada ficha. **Lo ejecutas tú.** Claude lo escribe y lo prueba con un navegador simulado, pero no lo ejecuta contra esa página (`docs/01` §9.1, D-21).
+
+**Preparación, una sola vez** (en la terminal, dentro de `bot-scraping/`):
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install playwright
+```
+
+Son unos 45 MB. Usa el Chrome que ya tienes instalado y no baja otro navegador. `.venv/` está fuera de git.
+
+**Primera corrida** (la muestra de 20 más la ficha de baja de oficio de tu primera captura):
+
+```bash
+.venv/bin/python -I scripts/spike/lookup_fetch.py \
+    --list data/processed/aduanet/2026-10-25/sp06_muestra_20_ruc.csv --ruc 20526185847 \
+    --out data/raw/consulta_ruc/2026-10-25 --max 21 --screenshot
+```
+
+**Qué hace y qué reglas respeta:**
+
+- Espera entre 6 y 12 segundos entre una consulta y otra, y nunca hace dos a la vez.
+- Se detiene a las 21 consultas de esta corrida (`--max`) y al llegar a 400 en el día (`--daily-cap`). No permite topes mayores a 1000.
+- Es **reanudable**: si lo cortas o se detiene, al volver a lanzarlo salta las fichas que ya guardó.
+- Si SUNAT pide una **verificación**, no intenta resolverla ni esquivarla: te avisa en la terminal, **la resuelves tú en la ventana** y pulsas Enter para reintentar (o escribes `s` para salir).
+- Si hay un **bloqueo** (403, 429 o un aviso de demasiadas consultas), se detiene en el acto y no insiste.
+- Tras 3 errores seguidos, se detiene.
+- Guarda en `data/raw/consulta_ruc/2026-10-25/`: `<ruc>.html` (y `<ruc>.png` con `--screenshot`) más un registro `lookups.jsonl` con el resultado de cada intento.
+
+**Es normal que la primera corrida falle en algún paso.** El programa se escribió a partir de tus capturas, sin ver la página por dentro (no puedo abrirla). Si no encuentra el campo o la ficha, guarda lo que vio como `<ruc>.error.html` y se detiene a los 3 errores. Me lo cuentas y lo ajusto con esos archivos.
+
+**Después de la primera corrida:** dime cuántas fichas guardó, cuántas veces pidió verificación y si algo falló. Con las fichas escribo el parser. Cuando funcione, el mismo programa se usa para los días siguientes con la lista completa (`--list …/importadores_activo_habido.csv --max 400`): a 400 por día, unos 29 días en total (§4.4).
+
+### 6.2 Manual (alternativa)
+
+Si prefieres hacerlas a mano, para cada RUC de la lista:
 
 1. Abre la consulta de SUNAT en tu Chrome: `https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp`.
-2. En **Por RUC**, escribe el RUC de la lista y pulsa **Buscar**. Si SUNAT pide una verificación, resuélvela tú.
-3. Cuando cargue la ficha, baja hasta el final y usa **Archivo → Guardar página como…** con el formato **«Página web, completa»**. Ponle de nombre el RUC y guárdala en `bot-scraping/data/raw/consulta_ruc/2026-10-25/`. («Solo HTML» podría guardar una página vacía si la ficha se arma con JavaScript.)
-4. En la lista, anota en `pidio_verificacion` si fue **sí** o **no**, y en `observaciones` cualquier cosa rara.
-5. Pulsa **Volver** y sigue con el siguiente.
+2. En **Por RUC**, escribe el RUC y pulsa **Buscar**. Si pide una verificación, resuélvela tú.
+3. Con la ficha cargada, usa **Archivo → Guardar página como…** con el formato **«Página web, completa»**, con el RUC de nombre, en `bot-scraping/data/raw/consulta_ruc/2026-10-25/`.
+4. Anota en la lista si pidió verificación y pulsa **Volver**.
 
-**Reglas:**
+Consulta una a la vez, con unos 10 segundos entre consultas, y detente si aparece un bloqueo.
 
-- Consulta **uno por uno**, con el ritmo normal de quien lo hace a mano (unos 10 segundos entre consultas).
-- Si aparece un bloqueo o un aviso de «demasiadas consultas», **detente**, anótalo y no insistas.
-- Sin extensiones ni scripts de automatización: son consultas manuales a propósito.
-
-**Qué hago yo:** no navego esa página (`docs/01` §9.1). Leo los archivos que guardes, extraigo los campos, comparo con `docs/05` §5 y armo los *fixtures*. Los de las personas naturales se vuelven sintéticos antes de entrar al repositorio, que es público (`docs/11` §10).
-
-**Qué me dices al terminar:** cuántas veces pidió verificación, si algún RUC dio un error y si falta algún campo que esperabas ver.
+**Qué hago yo en ambos casos:** no navego esa página. Leo los archivos guardados, extraigo los campos, comparo con `docs/05` §5 y armo los *fixtures*. Los de las personas naturales se vuelven sintéticos antes de entrar al repositorio, que es público (`docs/11` §10).
 
 ## 7. Siguientes pasos
 

@@ -10,6 +10,8 @@ Se ejecutan con `python3 -I` (modo aislado) y reciben las rutas como argumentos.
 | `aduanet_stats.py` | Filas, duplicados, RUC inválidos y fechas de la lista de Aduanet. Escribe los RUC únicos **sin nombres** | `lista.html` `rucs.tsv` |
 | `padron_cross.py` | Cruza los RUC de la lista con el padrón y cuenta ACTIVO + HABIDO. Escribe los elegibles **sin nombres** | `padron.zip` `rucs.tsv` `elegibles.tsv` |
 | `pick_sp06_sample.py` | Arma la muestra de 20 RUC variados (S.A.C., S.A., E.I.R.L., S.R.L., sucursal, con y sin palabras clave, Lima y provincias, 2 personas naturales) para las consultas manuales | `importadores_activo_habido.csv` `salida.csv` |
+| `lookup_fetch.py` | **Consulta RUC automática** con tu Chrome: abre la consulta de SUNAT, busca cada RUC y guarda la ficha. Ritmo cortés, topes, reanudable. **Lo lanzas tú** (ver abajo) | `--list` `--out` `--max` … |
+| `test_lookup_fetch.py` | 16 pruebas de la lógica de `lookup_fetch.py` con un navegador simulado (no toca SUNAT) | — |
 | `export_h1_csv.py` | Genera el CSV de importadores `ACTIVO` + `HABIDO` con razón social, tipo, estado, condición, departamento y prioridad | `lista.html` `elegibles.tsv` `salida.csv` |
 
 ## Orden de uso
@@ -21,6 +23,33 @@ python3 -I scripts/spike/padron_cross.py data/raw/padron/<fecha>/padron_reducido
 python3 -I scripts/spike/export_h1_csv.py data/raw/aduanet/<fecha>/lista.html \
     data/processed/aduanet/<fecha>/rucs_activo_habido.tsv data/processed/aduanet/<fecha>/importadores_activo_habido.csv
 ```
+
+## Consulta RUC automática (`lookup_fetch.py`)
+
+Preparación, una sola vez, dentro de `bot-scraping/`:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install playwright      # ~45 MB. Usa tu Chrome instalado: no descarga otro navegador
+```
+
+Primera corrida (muestra de 20 + la ficha de baja; Chrome visible y una captura por ficha):
+
+```bash
+.venv/bin/python -I scripts/spike/lookup_fetch.py \
+    --list data/processed/aduanet/2026-10-25/sp06_muestra_20_ruc.csv --ruc 20526185847 \
+    --out data/raw/consulta_ruc/2026-10-25 --max 21 --screenshot
+```
+
+Un día de trabajo (los 400 de mayor prioridad que falten; es reanudable y se puede repetir al día siguiente):
+
+```bash
+.venv/bin/python -I scripts/spike/lookup_fetch.py \
+    --list data/processed/aduanet/2026-10-25/importadores_activo_habido.csv \
+    --out data/raw/consulta_ruc/2026-10-25 --max 400
+```
+
+`--dry-run` muestra el plan sin abrir el navegador. Pruebas: `python3 -I scripts/spike/test_lookup_fetch.py`.
 
 ## Cuidado con los datos
 

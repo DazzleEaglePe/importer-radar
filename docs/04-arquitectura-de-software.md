@@ -166,7 +166,7 @@ class ProviderResult:
 
 | Proveedor | Estado | Notas |
 | --- | --- | --- |
-| `sunat_web` | **Primero** | Playwright, un RUC a la vez, ritmo cortés. Detecta el desafío de verificación y se detiene |
+| `sunat_web` | **Primero** | Playwright sobre el Chrome instalado (`channel="chrome"`, sin bajar otro navegador), un RUC a la vez, ritmo cortés. Detecta el desafío de verificación y se detiene o espera a la persona. Prototipo en `scripts/spike/lookup_fetch.py` |
 | `manual` | **Primero** | Formulario o pegado de texto. Resuelve `NEEDS_HUMAN` |
 | `third_party` | **No se construye por ahora** (sin presupuesto, D-12) | La interfaz queda lista para agregarlo |
 | `official_api` | **No se construye** (no se usa Clave SOL, D-12) | Solo si SUNAT publica un servicio oficial de consulta de RUC |

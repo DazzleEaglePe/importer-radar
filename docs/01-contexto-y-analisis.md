@@ -117,6 +117,7 @@ Un panel web interno con un **pipeline automático** y una **vista de revisión*
 | D-18 | Los términos de las fuentes se revisan en lo posible (§9.1). Las consultas manuales del spike las haces **tú**, no yo, porque el `robots.txt` de la consulta RUC bloquea a los agentes de Anthropic | Revisión del 25/10 |
 | D-19 | La lista de Aduanet se **descarga con una solicitud simple** (`GET`, sin sesión) y también se puede **cargar desde un archivo guardado**, como alternativa | Spike 25/10 (`docs/12` §2) |
 | D-20 | Se **quita del puntaje** el criterio «actualización en Aduanet»: 99.1 % de las fechas son de 2001 a 2009. Sus 10 puntos pasan 5 al rubro y 5 a la antigüedad | Spike 25/10 (`docs/12` §2.4) |
+| D-21 | La consulta RUC individual se **automatiza con un programa propio** (Playwright sobre tu Chrome instalado, ventana visible) que **tú ejecutas**. Claude lo escribe y lo prueba con un navegador simulado, pero **no lo ejecuta** contra esa página. Ritmo cortés, topes, parada ante bloqueos y verificaciones resueltas por ti | Tu petición 25/10 (`docs/12` §6) |
 
 ## 6. Cómo se decide qué es «confiable» (propuesto)
 
@@ -229,7 +230,7 @@ Respondidas el 25/10/2026:
 
 - Tu herramienta es **tu propio programa**, no un rastreador de IA. Consulta pocos RUC, con pausas, para uso interno y sin entrenar nada. Encaja con lo que el sitio permite en su `robots.txt`.
 - El sitio usa Cloudflare, que puede mostrar verificaciones anti-bot. Eso encaja con el riesgo R-02 y con la regla de **no evadirlas**.
-- Como el `robots.txt` bloquea a los agentes de Anthropic, **yo no navego esa página por ti**. Las consultas manuales del spike las haces tú en tu navegador y me pasas las páginas guardadas para analizarlas.
+- Como el `robots.txt` bloquea a los agentes de Anthropic, **yo no navego ni ejecuto consultas contra esa página**. Escribo el programa que las hace (`scripts/spike/lookup_fetch.py`), pero **lo lanzas tú** en tu Mac (D-21), y yo analizo las fichas que guarde.
 - Queda pendiente leer la Política de Privacidad de SUNAT y el procedimiento ARCO (tarea SP-09) y ver si Aduanet publica sus propias condiciones.
 - Este análisis **no es asesoría legal**. Si el proyecto crece o se abre a más personas, conviene una revisión formal.
 
